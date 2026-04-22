@@ -807,8 +807,8 @@ func TestPremiumStatsWithoutAccessRedirectsToSettings(t *testing.T) {
 		t.Fatalf("expected 303, got %d", rr.Code)
 	}
 
-	if rr.Header().Get("Location") != "/settings" {
-		t.Fatalf("expected redirect to /settings, got %s", rr.Header().Get("Location"))
+	if rr.Header().Get("Location") != "/pricing" {
+		t.Fatalf("expected redirect to /pricing, got %s", rr.Header().Get("Location"))
 	}
 }
 
