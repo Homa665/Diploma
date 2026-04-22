@@ -1,0 +1,230 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Админ-панель - StartupPlatform</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+{{define "nav"}}
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/feed" class="nav-logo">StartupPlatform</a>
+    <div class="nav-links">
+      {{if .UserID}}
+      <a href="/feed" class="nav-link" title="Лента"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg><span>Лента</span></a>
+      <a href="/post/new" class="nav-link" title="Создать"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg><span>Создать</span></a>
+      <a href="/chat" class="nav-link" title="Чат"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg><span>Чат</span></a>
+      <a href="/notifications" class="nav-link" title="Уведомления"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg><span>Уведомления</span><span id="notif-badge" class="nav-badge hidden">0</span></a>
+      <a href="/profile/{{.UserID}}" class="nav-link" title="Профиль"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg><span>Профиль</span></a>
+      {{if or (eq .UserRole "premium") (eq .UserRole "expert") (eq .UserRole "admin")}}
+      <a href="/premium-stats" class="nav-link" title="Статистика"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg><span>Статистика</span></a>
+      {{end}}
+      {{if eq .UserRole "admin"}}
+      <a href="/admin" class="nav-link" title="Админ"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg><span>Админ</span></a>
+      {{end}}
+      <a href="/logout" class="nav-link" title="Выйти"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg><span>Выйти</span></a>
+      {{else}}
+      <a href="/login" class="nav-link">Войти</a>
+      <a href="/register" class="nav-link">Регистрация</a>
+      {{end}}
+    </div>
+  </div>
+</nav>
+{{end}}
+{{template "nav" .}}
+
+<div class="container-wide">
+  <h2 style="margin-bottom:16px">Панель администратора</h2>
+
+  <!-- Stats -->
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-value">{{.Stats.TotalUsers}}</div><div class="stat-label">Пользователей</div></div>
+    <div class="stat-card"><div class="stat-value">{{.Stats.TotalPosts}}</div><div class="stat-label">Проектов</div></div>
+    <div class="stat-card"><div class="stat-value">{{.Stats.TotalComments}}</div><div class="stat-label">Комментариев</div></div>
+    <div class="stat-card"><div class="stat-value">{{.Stats.PendingComplaints}}</div><div class="stat-label">Жалоб</div></div>
+    <div class="stat-card"><div class="stat-value">{{.Stats.PendingExpertApps}}</div><div class="stat-label">Заявок экспертов</div></div>
+    <div class="stat-card"><div class="stat-value">{{.Stats.NewUsersToday}}</div><div class="stat-label">Новых за сегодня</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="admin-tabs">
+    <a href="/admin?tab=users" class="admin-tab {{if or (eq .Tab "users") (eq .Tab "")}}active{{end}}">Пользователи</a>
+    <a href="/admin?tab=complaints" class="admin-tab {{if eq .Tab "complaints"}}active{{end}}">Жалобы</a>
+    <a href="/admin?tab=experts" class="admin-tab {{if eq .Tab "experts"}}active{{end}}">Эксперты</a>
+    <a href="/admin?tab=bans" class="admin-tab {{if eq .Tab "bans"}}active{{end}}">Баны</a>
+    <a href="/admin?tab=logs" class="admin-tab {{if eq .Tab "logs"}}active{{end}}">Логи</a>
+  </div>
+
+  {{if or (eq .Tab "users") (eq .Tab "")}}
+  <!-- Users tab -->
+  <div class="card">
+    <div class="overflow-auto">
+      <table class="data-table">
+        <thead><tr><th>ID</th><th>Никнейм</th><th>Email</th><th>Роль</th><th>Дата</th><th>Действия</th></tr></thead>
+        <tbody>
+          {{range .Users}}
+          <tr>
+            <td>{{.ID}}</td>
+            <td><a href="/profile/{{.ID}}">{{.Nickname}}</a></td>
+            <td>{{.Email}}</td>
+            <td>
+              {{if eq .Role "admin"}}<span class="role-badge admin">Admin</span>
+              {{else if eq .Role "expert"}}<span class="role-badge expert">Expert</span>
+              {{else if eq .Role "premium"}}<span class="role-badge premium">PRO</span>
+              {{else}}User{{end}}
+            </td>
+            <td class="text-sm">{{timeAgo .CreatedAt}}</td>
+            <td>
+              <div style="display:flex;gap:4px;flex-wrap:wrap">
+                {{if ne .Role "admin"}}
+                <form data-api="/api/admin/change-role" data-reload="true" style="margin:0"><input type="hidden" name="user_id" value="{{.ID}}"><input type="hidden" name="role" value="expert"><button type="submit" class="btn btn-sm btn-outline" style="padding:3px 8px;font-size:.7rem">Expert</button></form>
+                <form data-api="/api/admin/change-role" data-reload="true" style="margin:0"><input type="hidden" name="user_id" value="{{.ID}}"><input type="hidden" name="role" value="premium"><button type="submit" class="btn btn-sm btn-outline" style="padding:3px 8px;font-size:.7rem">PRO</button></form>
+                <button class="btn btn-sm btn-outline" style="padding:3px 8px;font-size:.7rem;color:var(--danger)" onclick="openModal('ban-modal-{{.ID}}')">Бан</button>
+                <form data-api="/api/admin/delete-user" data-reload="true" style="margin:0"><input type="hidden" name="user_id" value="{{.ID}}"><button type="submit" class="btn btn-sm btn-outline" style="padding:3px 8px;font-size:.7rem;color:var(--danger)" onclick="return confirm('Удалить пользователя?')">Удалить</button></form>
+
+                <!-- Ban modal -->
+                <div id="ban-modal-{{.ID}}" class="modal-overlay" onclick="if(event.target===this)closeModal('ban-modal-{{.ID}}')">
+                  <div class="modal">
+                    <div class="modal-header"><h3 class="modal-title">Забанить {{.Nickname}}</h3><button class="modal-close" onclick="closeModal('ban-modal-{{.ID}}')">&times;</button></div>
+                    <form data-api="/api/admin/ban-user" data-reload="true">
+                      <input type="hidden" name="user_id" value="{{.ID}}">
+                      <div class="form-group">
+                        <label class="form-label">Причина</label>
+                        <input type="text" name="reason" class="form-input" required>
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Ограничение</label>
+                        <select name="restriction" class="form-select">
+                          <option value="full">Полный бан</option>
+                          <option value="posts">Запрет постов</option>
+                          <option value="comments">Запрет комментариев</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Длительность (дней)</label>
+                        <input type="number" name="days" class="form-input" value="7" min="1">
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Комментарий</label>
+                        <textarea name="admin_comment" class="form-textarea" rows="2"></textarea>
+                      </div>
+                      <button type="submit" class="btn btn-danger btn-block">Забанить</button>
+                    </form>
+                  </div>
+                </div>
+                {{end}}
+              </div>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {{end}}
+
+  {{if eq .Tab "complaints"}}
+  <!-- Complaints tab -->
+  <div class="card">
+    {{range .Complaints}}
+    <div class="card-body" style="border-bottom:1px solid var(--border-light)">
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+        <div>
+          <span class="text-sm text-muted">{{.TargetType}} #{{.TargetID}}</span>
+          <span class="category-badge" style="margin-left:8px">{{.Category}}</span>
+          {{if .TargetContent}}<span class="text-sm" style="margin-left:8px">{{.TargetContent}}</span>{{end}}
+        </div>
+        <span class="text-sm text-muted">{{timeAgo .CreatedAt}}</span>
+      </div>
+      <p style="font-size:.9rem;margin-bottom:8px">{{.Description}}</p>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="text-sm text-muted">От: <a href="/profile/{{.AuthorID}}">ID {{.AuthorID}}</a></span>
+        {{if eq .Status "pending"}}
+        <form data-api="/api/admin/complaints/{{.ID}}" data-reload="true" style="margin:0"><input type="hidden" name="status" value="resolved"><button type="submit" class="btn btn-sm btn-primary" style="padding:3px 10px;font-size:.7rem">Решено</button></form>
+        <form data-api="/api/admin/complaints/{{.ID}}" data-reload="true" style="margin:0"><input type="hidden" name="status" value="dismissed"><button type="submit" class="btn btn-sm btn-secondary" style="padding:3px 10px;font-size:.7rem">Отклонить</button></form>
+        {{else}}
+        <span class="text-sm" style="color:var(--success)">{{.Status}}</span>
+        {{end}}
+      </div>
+    </div>
+    {{else}}
+    <div class="empty"><p class="empty-text">Нет жалоб</p></div>
+    {{end}}
+  </div>
+  {{end}}
+
+  {{if eq .Tab "experts"}}
+  <!-- Experts tab -->
+  <div class="card">
+    {{range .ExpertApps}}
+    <div class="card-body" style="border-bottom:1px solid var(--border-light)">
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+        <div><strong><a href="/profile/{{.UserID}}">ID {{.UserID}}</a></strong></div>
+        <span class="text-sm text-muted">{{.Status}}</span>
+      </div>
+      <p style="font-size:.85rem;margin-bottom:4px">{{.Description}}</p>
+      {{if .Portfolio}}<a href="{{.Portfolio}}" class="text-sm" target="_blank">Портфолио</a>{{end}}
+      {{if eq .Status "pending"}}
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <form data-api="/api/admin/expert-apps/{{.ID}}" data-reload="true" style="margin:0"><input type="hidden" name="status" value="approved"><button type="submit" class="btn btn-sm btn-primary">Одобрить</button></form>
+        <form data-api="/api/admin/expert-apps/{{.ID}}" data-reload="true" style="margin:0"><input type="hidden" name="status" value="rejected"><button type="submit" class="btn btn-sm btn-secondary">Отклонить</button></form>
+      </div>
+      {{end}}
+    </div>
+    {{else}}
+    <div class="empty"><p class="empty-text">Нет заявок</p></div>
+    {{end}}
+  </div>
+  {{end}}
+
+  {{if eq .Tab "bans"}}
+  <!-- Bans tab -->
+  <div class="card">
+    <div class="overflow-auto">
+      <table class="data-table">
+        <thead><tr><th>Пользователь</th><th>Причина</th><th>Ограничение</th><th>До</th><th>Статус</th></tr></thead>
+        <tbody>
+          {{range .Bans}}
+          <tr>
+            <td>{{.Nickname}}</td>
+            <td>{{.Reason}}</td>
+            <td>{{.Restriction}}</td>
+            <td class="text-sm">{{timeAgo .ExpiresAt}}</td>
+            <td>{{if .IsActive}}<span style="color:var(--danger)">Активен</span>{{else}}<span style="color:var(--success)">Истёк</span>{{end}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {{end}}
+
+  {{if eq .Tab "logs"}}
+  <!-- Activity logs tab -->
+  <div class="card">
+    <div class="overflow-auto">
+      <table class="data-table">
+        <thead><tr><th>Время</th><th>Пользователь</th><th>Действие</th><th>Объект</th><th>Детали</th><th>IP</th></tr></thead>
+        <tbody>
+          {{range .Logs}}
+          <tr>
+            <td class="text-sm">{{timeAgo .CreatedAt}}</td>
+            <td>{{.Nickname}}</td>
+            <td>{{.Action}}</td>
+            <td>{{.TargetType}} #{{.TargetID}}</td>
+            <td class="text-sm">{{.Details}}</td>
+            <td class="text-sm">{{.IPAddress}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {{end}}
+</div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>

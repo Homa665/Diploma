@@ -1,0 +1,2564 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>config: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">startup-platform/internal/config/config.go (100.0%)</option>
+				
+				<option value="file1">startup-platform/internal/database/database.go (87.5%)</option>
+				
+				<option value="file2">startup-platform/internal/handlers/admin.go (100.0%)</option>
+				
+				<option value="file3">startup-platform/internal/handlers/auth.go (80.8%)</option>
+				
+				<option value="file4">startup-platform/internal/handlers/chat.go (92.3%)</option>
+				
+				<option value="file5">startup-platform/internal/handlers/comments.go (98.2%)</option>
+				
+				<option value="file6">startup-platform/internal/handlers/handler.go (41.4%)</option>
+				
+				<option value="file7">startup-platform/internal/handlers/posts.go (94.4%)</option>
+				
+				<option value="file8">startup-platform/internal/handlers/profile.go (99.5%)</option>
+				
+				<option value="file9">startup-platform/internal/middleware/auth.go (95.9%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package config
+
+import "os"
+
+type Config struct {
+        Port        string
+        DatabaseURL string
+        JWTSecret   string
+        UploadDir   string
+}
+
+func Load() *Config <span class="cov8" title="1">{
+        port := os.Getenv("PORT")
+        if port == "" </span><span class="cov8" title="1">{
+                port = "8080"
+        }</span>
+
+        <span class="cov8" title="1">dbURL := os.Getenv("DATABASE_URL")
+        if dbURL == "" </span><span class="cov8" title="1">{
+                dbURL = "postgres://postgres:12345678@localhost:5432/startup_platform?sslmode=disable"
+        }</span>
+
+        <span class="cov8" title="1">jwtSecret := os.Getenv("JWT_SECRET")
+        if jwtSecret == "" </span><span class="cov8" title="1">{
+                jwtSecret = "s3cr3t_jwt_k3y_f0r_startup_platform_2025"
+        }</span>
+
+        <span class="cov8" title="1">uploadDir := os.Getenv("UPLOAD_DIR")
+        if uploadDir == "" </span><span class="cov8" title="1">{
+                uploadDir = "./uploads"
+        }</span>
+
+        <span class="cov8" title="1">return &amp;Config{
+                Port:        port,
+                DatabaseURL: dbURL,
+                JWTSecret:   jwtSecret,
+                UploadDir:   uploadDir,
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package database
+
+import (
+        "context"
+        "database/sql"
+        "fmt"
+        "time"
+
+        _ "github.com/jackc/pgx/v5/stdlib"
+)
+
+func Connect(databaseURL string) (*sql.DB, error) <span class="cov8" title="1">{
+        db, err := sql.Open("pgx", databaseURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("failed to open database: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">db.SetMaxOpenConns(25)
+        db.SetMaxIdleConns(10)
+        db.SetConnMaxLifetime(5 * time.Minute)
+
+        ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+
+        if err := db.PingContext(ctx); err != nil </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("failed to ping database: %w", err)
+        }</span>
+
+        <span class="cov8" title="1">return db, nil</span>
+}
+
+func Migrate(db *sql.DB) error <span class="cov8" title="1">{
+        queries := []string{
+                `CREATE TABLE IF NOT EXISTS users (
+                        id SERIAL PRIMARY KEY,
+                        email VARCHAR(255) UNIQUE NOT NULL,
+                        phone VARCHAR(50) DEFAULT '',
+                        nickname VARCHAR(100) UNIQUE NOT NULL,
+                        password_hash VARCHAR(255) NOT NULL,
+                        name VARCHAR(200) DEFAULT '',
+                        city VARCHAR(100) DEFAULT '',
+                        bio TEXT DEFAULT '',
+                        role VARCHAR(20) DEFAULT 'user',
+                        interests TEXT DEFAULT '',
+                        user_role2 VARCHAR(100) DEFAULT '',
+                        avatar_url VARCHAR(500) DEFAULT '',
+                        is_blocked BOOLEAN DEFAULT FALSE,
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW()
+                )`,
+                `CREATE TABLE IF NOT EXISTS posts (
+                        id SERIAL PRIMARY KEY,
+                        author_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        title VARCHAR(500) NOT NULL,
+                        description TEXT NOT NULL,
+                        category VARCHAR(100) DEFAULT '',
+                        tags TEXT DEFAULT '',
+                        is_pinned BOOLEAN DEFAULT FALSE,
+                        pinned_until TIMESTAMP,
+                        comments_off BOOLEAN DEFAULT FALSE,
+                        is_hidden BOOLEAN DEFAULT FALSE,
+                        view_count INTEGER DEFAULT 0,
+                        is_premium BOOLEAN DEFAULT FALSE,
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW()
+                )`,
+                `CREATE TABLE IF NOT EXISTS files (
+                        id SERIAL PRIMARY KEY,
+                        post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+                        filename VARCHAR(500) NOT NULL,
+                        file_path VARCHAR(1000) NOT NULL,
+                        file_type VARCHAR(100) DEFAULT '',
+                        file_size BIGINT DEFAULT 0,
+                        created_at TIMESTAMP DEFAULT NOW()
+                )`,
+                `CREATE TABLE IF NOT EXISTS comments (
+                        id SERIAL PRIMARY KEY,
+                        post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+                        author_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,
+                        content TEXT NOT NULL,
+                        like_count INTEGER DEFAULT 0,
+                        created_at TIMESTAMP DEFAULT NOW()
+                )`,
+                `CREATE TABLE IF NOT EXISTS ratings (
+                        id SERIAL PRIMARY KEY,
+                        post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+                        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        score INTEGER NOT NULL CHECK (score &gt;= 1 AND score &lt;= 10),
+                        review TEXT DEFAULT '',
+                        is_expert BOOLEAN DEFAULT FALSE,
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        UNIQUE(post_id, user_id)
+                )`,
+                `CREATE TABLE IF NOT EXISTS chat_messages (
+                        id SERIAL PRIMARY KEY,
+                        sender_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        receiver_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        content TEXT NOT NULL,
+                        is_read BOOLEAN DEFAULT FALSE,
+                        created_at TIMESTAMP DEFAULT NOW()
+                )`,
+                `CREATE TABLE IF NOT EXISTS notifications (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        type VARCHAR(50) NOT NULL,
+                        content TEXT NOT NULL,
+                        link VARCHAR(500) DEFAULT '',
+                        is_read BOOLEAN DEFAULT FALSE,
+                        created_at TIMESTAMP DEFAULT NOW()
+                )`,
+                `CREATE TABLE IF NOT EXISTS team_requests (
+                        id SERIAL PRIMARY KEY,
+                        post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+                        author_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        title VARCHAR(300) NOT NULL,
+                        description TEXT DEFAULT '',
+                        skills TEXT DEFAULT '',
+                        role_needed VARCHAR(100) DEFAULT '',
+                        is_open BOOLEAN DEFAULT TRUE,
+                        created_at TIMESTAMP DEFAULT NOW()
+                )`,
+                `CREATE TABLE IF NOT EXISTS team_responses (
+                        id SERIAL PRIMARY KEY,
+                        request_id INTEGER REFERENCES team_requests(id) ON DELETE CASCADE,
+                        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        message TEXT DEFAULT '',
+                        status VARCHAR(20) DEFAULT 'pending',
+                        created_at TIMESTAMP DEFAULT NOW()
+                )`,
+                `CREATE TABLE IF NOT EXISTS complaints (
+                        id SERIAL PRIMARY KEY,
+                        author_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        target_type VARCHAR(20) NOT NULL,
+                        target_id INTEGER NOT NULL,
+                        category VARCHAR(100) DEFAULT '',
+                        description TEXT NOT NULL,
+                        status VARCHAR(20) DEFAULT 'pending',
+                        created_at TIMESTAMP DEFAULT NOW()
+                )`,
+                `CREATE TABLE IF NOT EXISTS subscriptions (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        plan VARCHAR(50) NOT NULL,
+                        status VARCHAR(20) DEFAULT 'active',
+                        expires_at TIMESTAMP NOT NULL,
+                        created_at TIMESTAMP DEFAULT NOW()
+                )`,
+                `CREATE TABLE IF NOT EXISTS friendships (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        friend_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        status VARCHAR(20) DEFAULT 'pending',
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        UNIQUE(user_id, friend_id)
+                )`,
+                `CREATE TABLE IF NOT EXISTS polls (
+                        id SERIAL PRIMARY KEY,
+                        post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+                        question TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT NOW()
+                )`,
+                `CREATE TABLE IF NOT EXISTS poll_options (
+                        id SERIAL PRIMARY KEY,
+                        poll_id INTEGER REFERENCES polls(id) ON DELETE CASCADE,
+                        text VARCHAR(500) NOT NULL,
+                        vote_count INTEGER DEFAULT 0
+                )`,
+                `CREATE TABLE IF NOT EXISTS poll_votes (
+                        id SERIAL PRIMARY KEY,
+                        poll_id INTEGER REFERENCES polls(id) ON DELETE CASCADE,
+                        option_id INTEGER REFERENCES poll_options(id) ON DELETE CASCADE,
+                        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        UNIQUE(poll_id, user_id)
+                )`,
+                `CREATE TABLE IF NOT EXISTS comment_likes (
+                        id SERIAL PRIMARY KEY,
+                        comment_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,
+                        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        UNIQUE(comment_id, user_id)
+                )`,
+                `CREATE TABLE IF NOT EXISTS reposts (
+                        id SERIAL PRIMARY KEY,
+                        post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+                        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        comment TEXT DEFAULT '',
+                        created_at TIMESTAMP DEFAULT NOW()
+                )`,
+                `CREATE TABLE IF NOT EXISTS blocked_users (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        blocked_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        UNIQUE(user_id, blocked_id)
+                )`,
+                `CREATE TABLE IF NOT EXISTS expert_applications (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                        portfolio TEXT DEFAULT '',
+                        description TEXT DEFAULT '',
+                        status VARCHAR(20) DEFAULT 'pending',
+                        created_at TIMESTAMP DEFAULT NOW()
+                )`,
+                `CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id)`,
+                `CREATE INDEX IF NOT EXISTS idx_posts_category ON posts(category)`,
+                `CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(created_at DESC)`,
+                `CREATE INDEX IF NOT EXISTS idx_comments_post ON comments(post_id)`,
+                `CREATE INDEX IF NOT EXISTS idx_ratings_post ON ratings(post_id)`,
+                `CREATE INDEX IF NOT EXISTS idx_chat_sender ON chat_messages(sender_id)`,
+                `CREATE INDEX IF NOT EXISTS idx_chat_receiver ON chat_messages(receiver_id)`,
+                `CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id)`,
+                `CREATE INDEX IF NOT EXISTS idx_team_requests_post ON team_requests(post_id)`,
+                `CREATE INDEX IF NOT EXISTS idx_complaints_status ON complaints(status)`,
+        }
+
+        for _, q := range queries </span><span class="cov8" title="1">{
+                if _, err := db.Exec(q); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("migration failed: %w\nQuery: %s", err, q)
+                }</span>
+        }
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package handlers
+
+import (
+        "net/http"
+        "strconv"
+        "strings"
+        "time"
+
+        "startup-platform/internal/models"
+)
+
+func (h *Handler) HandleAdminPage(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+        if role != "admin" </span><span class="cov8" title="1">{
+                http.Redirect(w, r, "/feed", http.StatusSeeOther)
+                return
+        }</span>
+
+        <span class="cov8" title="1">var stats models.AdminStats
+        h.DB.QueryRow("SELECT COUNT(*) FROM users").Scan(&amp;stats.TotalUsers)
+        h.DB.QueryRow("SELECT COUNT(*) FROM posts").Scan(&amp;stats.TotalPosts)
+        h.DB.QueryRow("SELECT COUNT(*) FROM comments").Scan(&amp;stats.TotalComments)
+        h.DB.QueryRow("SELECT COUNT(*) FROM complaints").Scan(&amp;stats.TotalComplaints)
+        h.DB.QueryRow("SELECT COUNT(*) FROM complaints WHERE status = 'pending'").Scan(&amp;stats.PendingComplaints)
+        h.DB.QueryRow("SELECT COUNT(*) FROM users WHERE role = 'expert'").Scan(&amp;stats.TotalExperts)
+        h.DB.QueryRow("SELECT COUNT(*) FROM users WHERE role = 'premium'").Scan(&amp;stats.TotalPremium)
+        h.DB.QueryRow("SELECT COUNT(*) FROM users WHERE created_at &gt;= CURRENT_DATE").Scan(&amp;stats.NewUsersToday)
+        h.DB.QueryRow("SELECT COUNT(*) FROM posts WHERE created_at &gt;= CURRENT_DATE").Scan(&amp;stats.NewPostsToday)
+        h.DB.QueryRow("SELECT COUNT(*) FROM expert_applications WHERE status = 'pending'").Scan(&amp;stats.PendingExpertApps)
+
+        userRows, _ := h.DB.Query(
+                "SELECT id, email, nickname, name, role, is_blocked, created_at FROM users ORDER BY created_at DESC LIMIT 100",
+        )
+        var users []models.User
+        if userRows != nil </span><span class="cov8" title="1">{
+                for userRows.Next() </span><span class="cov8" title="1">{
+                        var u models.User
+                        userRows.Scan(&amp;u.ID, &amp;u.Email, &amp;u.Nickname, &amp;u.Name, &amp;u.Role, &amp;u.IsBlocked, &amp;u.CreatedAt)
+                        users = append(users, u)
+                }</span>
+                <span class="cov8" title="1">userRows.Close()</span>
+        }
+
+        <span class="cov8" title="1">complaintRows, _ := h.DB.Query(
+                `SELECT c.id, c.author_id, c.target_type, c.target_id, c.category, c.description, c.status, c.created_at,
+                u.nickname
+                FROM complaints c JOIN users u ON c.author_id = u.id
+                ORDER BY CASE WHEN c.status = 'pending' THEN 0 ELSE 1 END, c.created_at DESC LIMIT 100`,
+        )
+        var complaints []models.Complaint
+        if complaintRows != nil </span><span class="cov8" title="1">{
+                for complaintRows.Next() </span><span class="cov8" title="1">{
+                        var c models.Complaint
+                        complaintRows.Scan(&amp;c.ID, &amp;c.AuthorID, &amp;c.TargetType, &amp;c.TargetID, &amp;c.Category,
+                                &amp;c.Description, &amp;c.Status, &amp;c.CreatedAt, &amp;c.AuthorNickname)
+                        complaints = append(complaints, c)
+                }</span>
+                <span class="cov8" title="1">complaintRows.Close()</span>
+        }
+
+        <span class="cov8" title="1">expertRows, _ := h.DB.Query(
+                `SELECT ea.id, ea.user_id, ea.portfolio, ea.description, ea.status, ea.created_at,
+                u.nickname, u.email
+                FROM expert_applications ea JOIN users u ON ea.user_id = u.id
+                ORDER BY CASE WHEN ea.status = 'pending' THEN 0 ELSE 1 END, ea.created_at DESC`,
+        )
+
+        type ExpertApp struct {
+                ID          int       `json:"id"`
+                UserID      int       `json:"user_id"`
+                Portfolio   string    `json:"portfolio"`
+                Description string    `json:"description"`
+                Status      string    `json:"status"`
+                CreatedAt   time.Time `json:"created_at"`
+                Nickname    string    `json:"nickname"`
+                Email       string    `json:"email"`
+        }
+        var expertApps []ExpertApp
+        if expertRows != nil </span><span class="cov8" title="1">{
+                for expertRows.Next() </span><span class="cov8" title="1">{
+                        var ea ExpertApp
+                        expertRows.Scan(&amp;ea.ID, &amp;ea.UserID, &amp;ea.Portfolio, &amp;ea.Description, &amp;ea.Status, &amp;ea.CreatedAt, &amp;ea.Nickname, &amp;ea.Email)
+                        expertApps = append(expertApps, ea)
+                }</span>
+                <span class="cov8" title="1">expertRows.Close()</span>
+        }
+
+        <span class="cov8" title="1">postRows, _ := h.DB.Query(
+                `SELECT p.id, p.title, p.category, p.is_hidden, p.created_at, u.nickname
+                FROM posts p JOIN users u ON p.author_id = u.id
+                ORDER BY p.created_at DESC LIMIT 100`,
+        )
+        type AdminPost struct {
+                ID       int
+                Title    string
+                Category string
+                IsHidden bool
+                Author   string
+        }
+        var posts []AdminPost
+        if postRows != nil </span><span class="cov8" title="1">{
+                for postRows.Next() </span><span class="cov8" title="1">{
+                        var ap AdminPost
+                        var createdAt time.Time
+                        postRows.Scan(&amp;ap.ID, &amp;ap.Title, &amp;ap.Category, &amp;ap.IsHidden, &amp;createdAt, &amp;ap.Author)
+                        posts = append(posts, ap)
+                }</span>
+                <span class="cov8" title="1">postRows.Close()</span>
+        }
+
+        <span class="cov8" title="1">var nickname string
+        h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+
+        data := map[string]interface{}{
+                "Stats":      stats,
+                "Users":      users,
+                "Complaints": complaints,
+                "ExpertApps": expertApps,
+                "Posts":      posts,
+                "UserID":     userID,
+                "UserRole":   role,
+                "Nickname":   nickname,
+        }
+        h.renderTemplate(w, "admin.html", data)</span>
+}
+
+func (h *Handler) HandleAdminBlockUser(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        r.ParseForm()
+        targetIDStr := r.FormValue("user_id")
+        targetID, _ := strconv.Atoi(targetIDStr)
+        block := r.FormValue("blocked") == "true"
+
+        h.DB.Exec("UPDATE users SET is_blocked = $1 WHERE id = $2", block, targetID)
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})
+}</span>
+
+func (h *Handler) HandleAdminChangeRole(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        r.ParseForm()
+        targetIDStr := r.FormValue("user_id")
+        targetID, _ := strconv.Atoi(targetIDStr)
+        newRole := r.FormValue("role")
+
+        validRoles := map[string]bool{"user": true, "premium": true, "expert": true, "admin": true}
+        if !validRoles[newRole] </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректная роль")
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec("UPDATE users SET role = $1 WHERE id = $2", newRole, targetID)
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+
+func (h *Handler) HandleAdminComplaint(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        r.ParseForm()
+        complaintIDStr := strings.TrimPrefix(r.URL.Path, "/api/admin/complaints/")
+        complaintIDStr = strings.TrimSuffix(complaintIDStr, "/resolve")
+        complaintID, _ := strconv.Atoi(complaintIDStr)
+        status := r.FormValue("status")
+
+        h.DB.Exec("UPDATE complaints SET status = $1 WHERE id = $2", status, complaintID)
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})
+}</span>
+
+func (h *Handler) HandleAdminExpertApp(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        r.ParseForm()
+        appIDStr := strings.TrimPrefix(r.URL.Path, "/api/admin/expert-apps/")
+        appIDStr = strings.TrimSuffix(appIDStr, "/resolve")
+        appID, _ := strconv.Atoi(appIDStr)
+        action := r.FormValue("status")
+
+        if action == "approved" </span><span class="cov8" title="1">{
+                var uid int
+                h.DB.QueryRow("SELECT user_id FROM expert_applications WHERE id = $1", appID).Scan(&amp;uid)
+                h.DB.Exec("UPDATE expert_applications SET status = 'approved' WHERE id = $1", appID)
+                h.DB.Exec("UPDATE users SET role = 'expert' WHERE id = $1", uid)
+                h.DB.Exec("INSERT INTO notifications (user_id, type, content, link) VALUES ($1, 'expert', 'Ваша заявка на статус эксперта одобрена!', '/profile/me')", uid)
+        }</span> else<span class="cov8" title="1"> {
+                h.DB.Exec("UPDATE expert_applications SET status = 'rejected' WHERE id = $1", appID)
+                var uid int
+                h.DB.QueryRow("SELECT user_id FROM expert_applications WHERE id = $1", appID).Scan(&amp;uid)
+                h.DB.Exec("INSERT INTO notifications (user_id, type, content, link) VALUES ($1, 'expert', 'Ваша заявка на статус эксперта отклонена', '/profile/me')", uid)
+        }</span>
+
+        <span class="cov8" title="1">h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+
+func (h *Handler) HandleAdminHidePost(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        r.ParseForm()
+        postIDStr := r.FormValue("post_id")
+        postID, _ := strconv.Atoi(postIDStr)
+        h.DB.Exec("UPDATE posts SET is_hidden = TRUE WHERE id = $1", postID)
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})
+}</span>
+
+func (h *Handler) HandleAdminDeletePost(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        r.ParseForm()
+        postIDStr := r.FormValue("post_id")
+        postID, _ := strconv.Atoi(postIDStr)
+
+        h.DB.Exec("DELETE FROM posts WHERE id = $1", postID)
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})
+}</span>
+
+func (h *Handler) HandleHomePage(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+        if userID &gt; 0 </span><span class="cov8" title="1">{
+                http.Redirect(w, r, "/feed", http.StatusSeeOther)
+                return
+        }</span>
+
+        <span class="cov8" title="1">data := map[string]interface{}{
+                "UserID":   userID,
+                "UserRole": role,
+        }
+        h.renderTemplate(w, "home.html", data)</span>
+}
+
+func (h *Handler) HandleNotificationsPage(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+
+        rows, _ := h.DB.Query(
+                "SELECT id, user_id, type, content, link, is_read, created_at FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 100",
+                userID,
+        )
+
+        var notifications []models.Notification
+        if rows != nil </span><span class="cov8" title="1">{
+                for rows.Next() </span><span class="cov8" title="1">{
+                        var n models.Notification
+                        rows.Scan(&amp;n.ID, &amp;n.UserID, &amp;n.Type, &amp;n.Content, &amp;n.Link, &amp;n.IsRead, &amp;n.CreatedAt)
+                        notifications = append(notifications, n)
+                }</span>
+                <span class="cov8" title="1">rows.Close()</span>
+        }
+
+        <span class="cov8" title="1">var nickname string
+        h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+
+        data := map[string]interface{}{
+                "Notifications": notifications,
+                "UserID":        userID,
+                "UserRole":      role,
+                "Nickname":      nickname,
+        }
+        h.renderTemplate(w, "notifications.html", data)</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package handlers
+
+import (
+        "net/http"
+        "strings"
+        "time"
+
+        "startup-platform/internal/middleware"
+)
+
+func (h *Handler) HandleRegisterPage(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        h.renderTemplate(w, "register.html", nil)
+}</span>
+
+func (h *Handler) HandleLoginPage(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        h.renderTemplate(w, "login.html", nil)
+}</span>
+
+func (h *Handler) HandleRegister(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        if err := r.ParseForm(); err != nil </span><span class="cov0" title="0">{
+                h.respondError(w, http.StatusBadRequest, "Некорректные данные")
+                return
+        }</span>
+
+        <span class="cov8" title="1">email := strings.TrimSpace(r.FormValue("email"))
+        phone := strings.TrimSpace(r.FormValue("phone"))
+        nickname := strings.TrimSpace(r.FormValue("nickname"))
+        password := r.FormValue("password")
+        name := strings.TrimSpace(r.FormValue("name"))
+
+        if email == "" || nickname == "" || password == "" </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Email, никнейм и пароль обязательны")
+                return
+        }</span>
+
+        <span class="cov8" title="1">if len(password) &lt; 6 </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Пароль должен быть не менее 6 символов")
+                return
+        }</span>
+
+        <span class="cov8" title="1">if !strings.Contains(email, "@") || !strings.Contains(email, ".") </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный email")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var exists bool
+        err := h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)", email).Scan(&amp;exists)
+        if err != nil </span><span class="cov0" title="0">{
+                h.respondError(w, http.StatusInternalServerError, "Ошибка сервера")
+                return
+        }</span>
+        <span class="cov8" title="1">if exists </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusConflict, "Email уже зарегистрирован")
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE nickname = $1)", nickname).Scan(&amp;exists)
+        if err != nil </span><span class="cov0" title="0">{
+                h.respondError(w, http.StatusInternalServerError, "Ошибка сервера")
+                return
+        }</span>
+        <span class="cov8" title="1">if exists </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusConflict, "Никнейм уже занят")
+                return
+        }</span>
+
+        <span class="cov8" title="1">passwordHash := hashPassword(password)
+
+        var userID int
+        err = h.DB.QueryRow(
+                `INSERT INTO users (email, phone, nickname, password_hash, name, role) 
+                VALUES ($1, $2, $3, $4, $5, 'user') RETURNING id`,
+                email, phone, nickname, passwordHash, name,
+        ).Scan(&amp;userID)
+        if err != nil </span><span class="cov0" title="0">{
+                h.respondError(w, http.StatusInternalServerError, "Ошибка создания аккаунта")
+                return
+        }</span>
+
+        <span class="cov8" title="1">token, err := middleware.GenerateJWT(h.JWTSecret, userID, "user")
+        if err != nil </span><span class="cov0" title="0">{
+                h.respondError(w, http.StatusInternalServerError, "Ошибка авторизации")
+                return
+        }</span>
+
+        <span class="cov8" title="1">http.SetCookie(w, &amp;http.Cookie{
+                Name:     "token",
+                Value:    token,
+                Path:     "/",
+                HttpOnly: true,
+                MaxAge:   259200,
+                SameSite: http.SameSiteLaxMode,
+        })
+
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{
+                "success":  true,
+                "redirect": "/feed",
+        })</span>
+}
+
+func (h *Handler) HandleLogin(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        if err := r.ParseForm(); err != nil </span><span class="cov0" title="0">{
+                h.respondError(w, http.StatusBadRequest, "Некорректные данные")
+                return
+        }</span>
+
+        <span class="cov8" title="1">email := strings.TrimSpace(r.FormValue("email"))
+        password := r.FormValue("password")
+
+        if email == "" || password == "" </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Email и пароль обязательны")
+                return
+        }</span>
+
+        <span class="cov8" title="1">passwordHash := hashPassword(password)
+
+        var userID int
+        var role string
+        var isBlocked bool
+        err := h.DB.QueryRow(
+                "SELECT id, role, is_blocked FROM users WHERE email = $1 AND password_hash = $2",
+                email, passwordHash,
+        ).Scan(&amp;userID, &amp;role, &amp;isBlocked)
+        if err != nil </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusUnauthorized, "Неверный email или пароль")
+                return
+        }</span>
+
+        <span class="cov8" title="1">if isBlocked </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusForbidden, "Аккаунт заблокирован")
+                return
+        }</span>
+
+        <span class="cov8" title="1">token, err := middleware.GenerateJWT(h.JWTSecret, userID, role)
+        if err != nil </span><span class="cov0" title="0">{
+                h.respondError(w, http.StatusInternalServerError, "Ошибка авторизации")
+                return
+        }</span>
+
+        <span class="cov8" title="1">http.SetCookie(w, &amp;http.Cookie{
+                Name:     "token",
+                Value:    token,
+                Path:     "/",
+                HttpOnly: true,
+                MaxAge:   259200,
+                SameSite: http.SameSiteLaxMode,
+        })
+
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{
+                "success":  true,
+                "redirect": "/feed",
+        })</span>
+}
+
+func (h *Handler) HandleLogout(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        http.SetCookie(w, &amp;http.Cookie{
+                Name:     "token",
+                Value:    "",
+                Path:     "/",
+                HttpOnly: true,
+                MaxAge:   -1,
+                Expires:  time.Unix(0, 0),
+        })
+        http.Redirect(w, r, "/", http.StatusSeeOther)
+}</span>
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package handlers
+
+import (
+        "net/http"
+        "strconv"
+        "strings"
+
+        "startup-platform/internal/models"
+)
+
+func (h *Handler) HandleChatPage(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+
+        rows, err := h.DB.Query(
+                `SELECT DISTINCT ON (partner_id) partner_id, nickname, avatar_url, last_msg, last_time, unread_count
+                FROM (
+                        SELECT 
+                                CASE WHEN sender_id = $1 THEN receiver_id ELSE sender_id END as partner_id,
+                                content as last_msg,
+                                created_at as last_time
+                        FROM chat_messages 
+                        WHERE sender_id = $1 OR receiver_id = $1
+                        ORDER BY created_at DESC
+                ) sub
+                JOIN users u ON u.id = sub.partner_id
+                LEFT JOIN LATERAL (
+                        SELECT COUNT(*) as unread_count FROM chat_messages 
+                        WHERE sender_id = sub.partner_id AND receiver_id = $1 AND is_read = FALSE
+                ) uc ON TRUE
+                ORDER BY partner_id, last_time DESC`,
+                userID,
+        )
+
+        type ChatPartner struct {
+                ID          int    `json:"id"`
+                Nickname    string `json:"nickname"`
+                AvatarURL   string `json:"avatar_url"`
+                LastMessage string `json:"last_message"`
+                UnreadCount int    `json:"unread_count"`
+        }
+
+        var partners []ChatPartner
+        if err == nil </span><span class="cov8" title="1">{
+                for rows.Next() </span><span class="cov8" title="1">{
+                        var cp ChatPartner
+                        var lastMsg string
+                        var lastTime interface{}
+                        var unread int
+                        rows.Scan(&amp;cp.ID, &amp;cp.Nickname, &amp;cp.AvatarURL, &amp;lastMsg, &amp;lastTime, &amp;unread)
+                        cp.LastMessage = lastMsg
+                        cp.UnreadCount = unread
+                        partners = append(partners, cp)
+                }</span>
+                <span class="cov8" title="1">rows.Close()</span>
+        }
+
+        <span class="cov8" title="1">if partners == nil </span><span class="cov8" title="1">{
+                rows2, err2 := h.DB.Query(
+                        `SELECT DISTINCT 
+                                CASE WHEN sender_id = $1 THEN receiver_id ELSE sender_id END as partner_id
+                        FROM chat_messages WHERE sender_id = $1 OR receiver_id = $1`,
+                        userID,
+                )
+                if err2 == nil </span><span class="cov8" title="1">{
+                        for rows2.Next() </span><span class="cov0" title="0">{
+                                var pid int
+                                rows2.Scan(&amp;pid)
+                                var cp ChatPartner
+                                h.DB.QueryRow("SELECT id, nickname, avatar_url FROM users WHERE id = $1", pid).Scan(&amp;cp.ID, &amp;cp.Nickname, &amp;cp.AvatarURL)
+                                var unread int
+                                h.DB.QueryRow("SELECT COUNT(*) FROM chat_messages WHERE sender_id = $1 AND receiver_id = $2 AND is_read = FALSE", pid, userID).Scan(&amp;unread)
+                                cp.UnreadCount = unread
+                                h.DB.QueryRow("SELECT content FROM chat_messages WHERE (sender_id = $1 AND receiver_id = $2) OR (sender_id = $2 AND receiver_id = $1) ORDER BY created_at DESC LIMIT 1", userID, pid).Scan(&amp;cp.LastMessage)
+                                partners = append(partners, cp)
+                        }</span>
+                        <span class="cov8" title="1">rows2.Close()</span>
+                }
+        }
+
+        <span class="cov8" title="1">var nickname string
+        h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+
+        data := map[string]interface{}{
+                "Partners": partners,
+                "UserID":   userID,
+                "UserRole": role,
+                "Nickname": nickname,
+        }
+        h.renderTemplate(w, "chat.html", data)</span>
+}
+
+func (h *Handler) HandleChatWith(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+        partnerIDStr := strings.TrimPrefix(r.URL.Path, "/chat/")
+        partnerID, err := strconv.Atoi(partnerIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                http.NotFound(w, r)
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec("UPDATE chat_messages SET is_read = TRUE WHERE sender_id = $1 AND receiver_id = $2", partnerID, userID)
+
+        rows, err := h.DB.Query(
+                `SELECT cm.id, cm.sender_id, cm.receiver_id, cm.content, cm.is_read, cm.created_at,
+                u.nickname, u.avatar_url
+                FROM chat_messages cm JOIN users u ON cm.sender_id = u.id
+                WHERE (cm.sender_id = $1 AND cm.receiver_id = $2) OR (cm.sender_id = $2 AND cm.receiver_id = $1)
+                ORDER BY cm.created_at ASC`,
+                userID, partnerID,
+        )
+
+        var messages []models.ChatMessage
+        if err == nil </span><span class="cov8" title="1">{
+                for rows.Next() </span><span class="cov8" title="1">{
+                        var m models.ChatMessage
+                        rows.Scan(&amp;m.ID, &amp;m.SenderID, &amp;m.ReceiverID, &amp;m.Content, &amp;m.IsRead, &amp;m.CreatedAt,
+                                &amp;m.SenderNickname, &amp;m.SenderAvatarURL)
+                        messages = append(messages, m)
+                }</span>
+                <span class="cov8" title="1">rows.Close()</span>
+        }
+
+        <span class="cov8" title="1">var partnerNickname, partnerAvatar string
+        h.DB.QueryRow("SELECT nickname, avatar_url FROM users WHERE id = $1", partnerID).Scan(&amp;partnerNickname, &amp;partnerAvatar)
+
+        var nickname string
+        h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+
+        data := map[string]interface{}{
+                "Messages":        messages,
+                "PartnerID":       partnerID,
+                "PartnerNickname": partnerNickname,
+                "PartnerAvatar":   partnerAvatar,
+                "UserID":          userID,
+                "UserRole":        role,
+                "Nickname":        nickname,
+        }
+        h.renderTemplate(w, "chat_with.html", data)</span>
+}
+
+func (h *Handler) HandleSendMessage(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        r.ParseForm()
+
+        receiverIDStr := r.FormValue("receiver_id")
+        receiverID, err := strconv.Atoi(receiverIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный получатель")
+                return
+        }</span>
+
+        <span class="cov8" title="1">content := strings.TrimSpace(r.FormValue("content"))
+        if content == "" </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Сообщение не может быть пустым")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var blocked bool
+        h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM blocked_users WHERE user_id = $1 AND blocked_id = $2)", receiverID, userID).Scan(&amp;blocked)
+        if blocked </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusForbidden, "Пользователь заблокировал вас")
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec(
+                "INSERT INTO chat_messages (sender_id, receiver_id, content) VALUES ($1, $2, $3)",
+                userID, receiverID, content,
+        )
+
+        var nickname string
+        h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+        h.DB.Exec(
+                "INSERT INTO notifications (user_id, type, content, link) VALUES ($1, 'message', $2, $3)",
+                receiverID, "Новое сообщение от "+nickname, "/chat/"+strconv.Itoa(userID),
+        )
+
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+
+func (h *Handler) HandleGetMessages(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        partnerIDStr := r.URL.Query().Get("partner_id")
+        partnerID, err := strconv.Atoi(partnerIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный ID")
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec("UPDATE chat_messages SET is_read = TRUE WHERE sender_id = $1 AND receiver_id = $2", partnerID, userID)
+
+        rows, err := h.DB.Query(
+                `SELECT cm.id, cm.sender_id, cm.receiver_id, cm.content, cm.is_read, cm.created_at,
+                u.nickname, u.avatar_url
+                FROM chat_messages cm JOIN users u ON cm.sender_id = u.id
+                WHERE (cm.sender_id = $1 AND cm.receiver_id = $2) OR (cm.sender_id = $2 AND cm.receiver_id = $1)
+                ORDER BY cm.created_at ASC`,
+                userID, partnerID,
+        )
+
+        var messages []models.ChatMessage
+        if err == nil </span><span class="cov8" title="1">{
+                for rows.Next() </span><span class="cov8" title="1">{
+                        var m models.ChatMessage
+                        rows.Scan(&amp;m.ID, &amp;m.SenderID, &amp;m.ReceiverID, &amp;m.Content, &amp;m.IsRead, &amp;m.CreatedAt,
+                                &amp;m.SenderNickname, &amp;m.SenderAvatarURL)
+                        messages = append(messages, m)
+                }</span>
+                <span class="cov8" title="1">rows.Close()</span>
+        }
+
+        <span class="cov8" title="1">h.respondJSON(w, http.StatusOK, messages)</span>
+}
+
+func (h *Handler) HandleGetNotifications(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+
+        rows, err := h.DB.Query(
+                "SELECT id, user_id, type, content, link, is_read, created_at FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50",
+                userID,
+        )
+
+        var notifications []models.Notification
+        if err == nil </span><span class="cov8" title="1">{
+                for rows.Next() </span><span class="cov8" title="1">{
+                        var n models.Notification
+                        rows.Scan(&amp;n.ID, &amp;n.UserID, &amp;n.Type, &amp;n.Content, &amp;n.Link, &amp;n.IsRead, &amp;n.CreatedAt)
+                        notifications = append(notifications, n)
+                }</span>
+                <span class="cov8" title="1">rows.Close()</span>
+        }
+
+        <span class="cov8" title="1">var unread int
+        for _, n := range notifications </span><span class="cov8" title="1">{
+                if !n.IsRead </span><span class="cov8" title="1">{
+                        unread++
+                }</span>
+        }
+        <span class="cov8" title="1">h.respondJSON(w, http.StatusOK, map[string]interface{}{"notifications": notifications, "unread_count": unread})</span>
+}
+
+func (h *Handler) HandleMarkNotificationRead(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        notifIDStr := strings.TrimPrefix(r.URL.Path, "/api/notifications/")
+        notifIDStr = strings.TrimSuffix(notifIDStr, "/read")
+        notifID, err := strconv.Atoi(notifIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный ID")
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec("UPDATE notifications SET is_read = TRUE WHERE id = $1 AND user_id = $2", notifID, userID)
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+
+func (h *Handler) HandleMarkAllNotificationsRead(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        h.DB.Exec("UPDATE notifications SET is_read = TRUE WHERE user_id = $1", userID)
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package handlers
+
+import (
+        "net/http"
+        "strconv"
+        "strings"
+)
+
+func (h *Handler) HandleAddComment(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        r.ParseForm()
+
+        postIDStr := r.FormValue("post_id")
+        postID, err := strconv.Atoi(postIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный ID поста")
+                return
+        }</span>
+
+        <span class="cov8" title="1">content := strings.TrimSpace(r.FormValue("content"))
+        if content == "" </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Комментарий не может быть пустым")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var commentsOff bool
+        h.DB.QueryRow("SELECT comments_off FROM posts WHERE id = $1", postID).Scan(&amp;commentsOff)
+        if commentsOff </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusForbidden, "Комментарии отключены")
+                return
+        }</span>
+
+        <span class="cov8" title="1">parentIDStr := r.FormValue("parent_id")
+        var parentID *int
+        if parentIDStr != "" </span><span class="cov8" title="1">{
+                pid, err := strconv.Atoi(parentIDStr)
+                if err == nil </span><span class="cov8" title="1">{
+                        parentID = &amp;pid
+                }</span>
+        }
+
+        <span class="cov8" title="1">var commentID int
+        err = h.DB.QueryRow(
+                "INSERT INTO comments (post_id, author_id, parent_id, content) VALUES ($1, $2, $3, $4) RETURNING id",
+                postID, userID, parentID, content,
+        ).Scan(&amp;commentID)
+        if err != nil </span><span class="cov0" title="0">{
+                h.respondError(w, http.StatusInternalServerError, "Ошибка добавления комментария")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var postAuthorID int
+        h.DB.QueryRow("SELECT author_id FROM posts WHERE id = $1", postID).Scan(&amp;postAuthorID)
+        if postAuthorID != userID </span><span class="cov8" title="1">{
+                var nickname string
+                h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+                h.DB.Exec(
+                        "INSERT INTO notifications (user_id, type, content, link) VALUES ($1, 'comment', $2, $3)",
+                        postAuthorID, nickname+" оставил комментарий к вашему посту", "/post/"+postIDStr,
+                )
+        }</span>
+
+        <span class="cov8" title="1">h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true, "comment_id": commentID})</span>
+}
+
+func (h *Handler) HandleDeleteComment(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+        commentIDStr := strings.TrimPrefix(r.URL.Path, "/api/comments/")
+        commentIDStr = strings.TrimSuffix(commentIDStr, "/delete")
+        commentID, err := strconv.Atoi(commentIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный ID")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var authorID, postID int
+        h.DB.QueryRow("SELECT author_id, post_id FROM comments WHERE id = $1", commentID).Scan(&amp;authorID, &amp;postID)
+
+        var postAuthorID int
+        h.DB.QueryRow("SELECT author_id FROM posts WHERE id = $1", postID).Scan(&amp;postAuthorID)
+
+        if authorID != userID &amp;&amp; postAuthorID != userID &amp;&amp; role != "admin" </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusForbidden, "Нет доступа")
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec("DELETE FROM comments WHERE id = $1", commentID)
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+
+func (h *Handler) HandleLikeComment(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        commentIDStr := strings.TrimPrefix(r.URL.Path, "/api/comments/")
+        commentIDStr = strings.TrimSuffix(commentIDStr, "/like")
+        commentID, err := strconv.Atoi(commentIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный ID")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var exists bool
+        h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM comment_likes WHERE comment_id = $1 AND user_id = $2)", commentID, userID).Scan(&amp;exists)
+
+        if exists </span><span class="cov8" title="1">{
+                h.DB.Exec("DELETE FROM comment_likes WHERE comment_id = $1 AND user_id = $2", commentID, userID)
+                h.DB.Exec("UPDATE comments SET like_count = like_count - 1 WHERE id = $1", commentID)
+        }</span> else<span class="cov8" title="1"> {
+                h.DB.Exec("INSERT INTO comment_likes (comment_id, user_id) VALUES ($1, $2)", commentID, userID)
+                h.DB.Exec("UPDATE comments SET like_count = like_count + 1 WHERE id = $1", commentID)
+        }</span>
+
+        <span class="cov8" title="1">var likeCount int
+        h.DB.QueryRow("SELECT like_count FROM comments WHERE id = $1", commentID).Scan(&amp;likeCount)
+
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{
+                "success":    true,
+                "liked":      !exists,
+                "like_count": likeCount,
+        })</span>
+}
+
+func (h *Handler) HandleRate(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+        r.ParseForm()
+
+        postIDStr := r.FormValue("post_id")
+        postID, err := strconv.Atoi(postIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный ID поста")
+                return
+        }</span>
+
+        <span class="cov8" title="1">scoreStr := r.FormValue("score")
+        score, err := strconv.Atoi(scoreStr)
+        if err != nil || score &lt; 1 || score &gt; 10 </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Оценка должна быть от 1 до 10")
+                return
+        }</span>
+
+        <span class="cov8" title="1">review := strings.TrimSpace(r.FormValue("review"))
+        isExpert := role == "expert"
+
+        var existingID int
+        err = h.DB.QueryRow("SELECT id FROM ratings WHERE post_id = $1 AND user_id = $2", postID, userID).Scan(&amp;existingID)
+        if err == nil </span><span class="cov8" title="1">{
+                h.DB.Exec("UPDATE ratings SET score = $1, review = $2, is_expert = $3 WHERE id = $4",
+                        score, review, isExpert, existingID)
+        }</span> else<span class="cov8" title="1"> {
+                h.DB.Exec(
+                        "INSERT INTO ratings (post_id, user_id, score, review, is_expert) VALUES ($1, $2, $3, $4, $5)",
+                        postID, userID, score, review, isExpert,
+                )
+        }</span>
+
+        <span class="cov8" title="1">var postAuthorID int
+        h.DB.QueryRow("SELECT author_id FROM posts WHERE id = $1", postID).Scan(&amp;postAuthorID)
+        if postAuthorID != userID </span><span class="cov8" title="1">{
+                var nickname string
+                h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+                h.DB.Exec(
+                        "INSERT INTO notifications (user_id, type, content, link) VALUES ($1, 'rating', $2, $3)",
+                        postAuthorID, nickname+" оценил ваш проект на "+scoreStr, "/post/"+postIDStr,
+                )
+        }</span>
+
+        <span class="cov8" title="1">h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+
+func (h *Handler) HandleVotePoll(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        r.ParseForm()
+
+        pollIDStr := r.FormValue("poll_id")
+        pollID, err := strconv.Atoi(pollIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный ID опроса")
+                return
+        }</span>
+
+        <span class="cov8" title="1">optionIDStr := r.FormValue("option_id")
+        optionID, err := strconv.Atoi(optionIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный вариант")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var exists bool
+        h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM poll_votes WHERE poll_id = $1 AND user_id = $2)", pollID, userID).Scan(&amp;exists)
+        if exists </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusConflict, "Вы уже голосовали")
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec("INSERT INTO poll_votes (poll_id, option_id, user_id) VALUES ($1, $2, $3)", pollID, optionID, userID)
+        h.DB.Exec("UPDATE poll_options SET vote_count = vote_count + 1 WHERE id = $1", optionID)
+
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package handlers
+
+import (
+        "crypto/sha256"
+        "database/sql"
+        "encoding/hex"
+        "encoding/json"
+        "html/template"
+        "net/http"
+        "path/filepath"
+        "strings"
+        "time"
+
+        "startup-platform/internal/middleware"
+)
+
+type Handler struct {
+        DB        *sql.DB
+        Templates *template.Template
+        JWTSecret string
+        UploadDir string
+}
+
+func NewHandler(db *sql.DB, tmplDir, jwtSecret, uploadDir string) *Handler <span class="cov8" title="1">{
+        funcMap := template.FuncMap{
+                "formatDate": func(t time.Time) string </span><span class="cov8" title="1">{
+                        return t.Format("02.01.2006 15:04")
+                }</span>,
+                "truncate": func(s string, n int) string <span class="cov8" title="1">{
+                        if len([]rune(s)) &lt;= n </span><span class="cov8" title="1">{
+                                return s
+                        }</span>
+                        <span class="cov0" title="0">return string([]rune(s)[:n]) + "..."</span>
+                },
+                "add": func(a, b int) int <span class="cov0" title="0">{
+                        return a + b
+                }</span>,
+                "sub": func(a, b int) int <span class="cov8" title="1">{
+                        return a - b
+                }</span>,
+                "seq": func(n int) []int <span class="cov0" title="0">{
+                        s := make([]int, n)
+                        for i := range s </span><span class="cov0" title="0">{
+                                s[i] = i + 1
+                        }</span>
+                        <span class="cov0" title="0">return s</span>
+                },
+                "dict": func(values ...interface{}) map[string]interface{} <span class="cov0" title="0">{
+                        m := make(map[string]interface{})
+                        for i := 0; i &lt; len(values)-1; i += 2 </span><span class="cov0" title="0">{
+                                key, ok := values[i].(string)
+                                if ok </span><span class="cov0" title="0">{
+                                        m[key] = values[i+1]
+                                }</span>
+                        }
+                        <span class="cov0" title="0">return m</span>
+                },
+                "isImage": func(ft string) bool <span class="cov8" title="1">{
+                        return strings.HasPrefix(ft, "image/")
+                }</span>,
+                "isVideo": func(ft string) bool <span class="cov0" title="0">{
+                        return strings.HasPrefix(ft, "video/")
+                }</span>,
+                "isAudio": func(ft string) bool <span class="cov0" title="0">{
+                        return strings.HasPrefix(ft, "audio/")
+                }</span>,
+                "json": func(v interface{}) template.JS <span class="cov0" title="0">{
+                        b, _ := json.Marshal(v)
+                        return template.JS(b)
+                }</span>,
+                "toJSON": func(v interface{}) string <span class="cov0" title="0">{
+                        b, _ := json.Marshal(v)
+                        return string(b)
+                }</span>,
+                "split": func(s, sep string) []string <span class="cov0" title="0">{
+                        if s == "" </span><span class="cov0" title="0">{
+                                return nil
+                        }</span>
+                        <span class="cov0" title="0">return strings.Split(s, sep)</span>
+                },
+                "contains": func(s, sub string) bool <span class="cov0" title="0">{
+                        return strings.Contains(s, sub)
+                }</span>,
+                "eq": func(a, b interface{}) bool <span class="cov8" title="1">{
+                        return a == b
+                }</span>,
+                "ne": func(a, b interface{}) bool <span class="cov8" title="1">{
+                        return a != b
+                }</span>,
+                "gt": func(a, b int) bool <span class="cov8" title="1">{
+                        return a &gt; b
+                }</span>,
+                "formatSize": func(size int64) string <span class="cov0" title="0">{
+                        if size &lt; 1024 </span><span class="cov0" title="0">{
+                                return strings.TrimRight(strings.TrimRight(json.Number(string(rune(size))).String(), "0"), ".") + " Б"
+                        }</span>
+                        <span class="cov0" title="0">if size &lt; 1024*1024 </span><span class="cov0" title="0">{
+                                kb := float64(size) / 1024
+                                if kb &lt; 10 </span><span class="cov0" title="0">{
+                                        return strings.Replace(json.Number(string(rune(int(kb*10)))).String(), "", "", 0) + " КБ"
+                                }</span>
+                                <span class="cov0" title="0">return json.Number(string(rune(int(kb)))).String() + " КБ"</span>
+                        }
+                        <span class="cov0" title="0">mb := float64(size) / (1024 * 1024)
+                        if mb &lt; 10 </span><span class="cov0" title="0">{
+                                return strings.Replace(json.Number(string(rune(int(mb*10)))).String(), "", "", 0) + " МБ"
+                        }</span>
+                        <span class="cov0" title="0">return json.Number(string(rune(int(mb)))).String() + " МБ"</span>
+                },
+        }
+
+        <span class="cov8" title="1">pattern := filepath.Join(tmplDir, "*.html")
+        tmpl := template.Must(template.New("").Funcs(funcMap).ParseGlob(pattern))
+
+        return &amp;Handler{
+                DB:        db,
+                Templates: tmpl,
+                JWTSecret: jwtSecret,
+                UploadDir: uploadDir,
+        }</span>
+}
+
+func hashPassword(password string) string <span class="cov8" title="1">{
+        h := sha256.New()
+        h.Write([]byte(password))
+        return hex.EncodeToString(h.Sum(nil))
+}</span>
+
+func (h *Handler) respondJSON(w http.ResponseWriter, status int, data interface{}) <span class="cov8" title="1">{
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(status)
+        json.NewEncoder(w).Encode(data)
+}</span>
+
+func (h *Handler) respondError(w http.ResponseWriter, status int, message string) <span class="cov8" title="1">{
+        h.respondJSON(w, status, map[string]string{"error": message})
+}</span>
+
+func (h *Handler) renderTemplate(w http.ResponseWriter, name string, data interface{}) <span class="cov8" title="1">{
+        w.Header().Set("Content-Type", "text/html; charset=utf-8")
+        if err := h.Templates.ExecuteTemplate(w, name, data); err != nil </span><span class="cov0" title="0">{
+                http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        }</span>
+}
+
+func (h *Handler) getCurrentUser(r *http.Request) (int, string) <span class="cov8" title="1">{
+        userID := middleware.GetUserID(r)
+        role := middleware.GetUserRole(r)
+        return userID, role
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package handlers
+
+import (
+        "fmt"
+        "io"
+        "net/http"
+        "os"
+        "path/filepath"
+        "strconv"
+        "strings"
+        "time"
+
+        "startup-platform/internal/models"
+)
+
+func (h *Handler) HandleFeedPage(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+        category := r.URL.Query().Get("category")
+        search := r.URL.Query().Get("search")
+        sort := r.URL.Query().Get("sort")
+        page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+        if page &lt; 1 </span><span class="cov8" title="1">{
+                page = 1
+        }</span>
+        <span class="cov8" title="1">limit := 12
+        offset := (page - 1) * limit
+
+        query := `SELECT p.id, p.author_id, p.title, p.description, p.category, p.tags,
+                p.is_pinned, p.pinned_until, p.comments_off, p.is_hidden, p.view_count,
+                p.is_premium, p.created_at, p.updated_at,
+                u.nickname, u.avatar_url, u.role,
+                COALESCE(AVG(CASE WHEN r.is_expert THEN r.score * 1.5 ELSE r.score END), 0) as avg_rating,
+                COUNT(DISTINCT r.id) as rating_count
+                FROM posts p
+                JOIN users u ON p.author_id = u.id
+                LEFT JOIN ratings r ON r.post_id = p.id
+                WHERE p.is_hidden = FALSE`
+
+        args := []interface{}{}
+        argIdx := 1
+
+        if category != "" </span><span class="cov8" title="1">{
+                query += fmt.Sprintf(" AND p.category = $%d", argIdx)
+                args = append(args, category)
+                argIdx++
+        }</span>
+
+        <span class="cov8" title="1">if search != "" </span><span class="cov8" title="1">{
+                query += fmt.Sprintf(" AND (LOWER(p.title) LIKE LOWER($%d) OR LOWER(p.description) LIKE LOWER($%d) OR LOWER(p.tags) LIKE LOWER($%d))", argIdx, argIdx+1, argIdx+2)
+                searchTerm := "%" + search + "%"
+                args = append(args, searchTerm, searchTerm, searchTerm)
+                argIdx += 3
+        }</span>
+
+        <span class="cov8" title="1">query += " GROUP BY p.id, u.nickname, u.avatar_url, u.role"
+
+        switch sort </span>{
+        case "rating":<span class="cov8" title="1">
+                query += " ORDER BY avg_rating DESC, p.created_at DESC"</span>
+        case "views":<span class="cov8" title="1">
+                query += " ORDER BY p.view_count DESC, p.created_at DESC"</span>
+        case "old":<span class="cov8" title="1">
+                query += " ORDER BY p.created_at ASC"</span>
+        default:<span class="cov8" title="1">
+                query += " ORDER BY p.is_pinned DESC, p.is_premium DESC, p.created_at DESC"</span>
+        }
+
+        <span class="cov8" title="1">query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", argIdx, argIdx+1)
+        args = append(args, limit, offset)
+
+        rows, err := h.DB.Query(query, args...)
+        if err != nil </span><span class="cov0" title="0">{
+                h.renderTemplate(w, "feed.html", map[string]interface{}{
+                        "Error": "Ошибка загрузки ленты",
+                })
+                return
+        }</span>
+        <span class="cov8" title="1">defer rows.Close()
+
+        var posts []models.Post
+        for rows.Next() </span><span class="cov8" title="1">{
+                var p models.Post
+                var pinnedUntil *time.Time
+                err := rows.Scan(&amp;p.ID, &amp;p.AuthorID, &amp;p.Title, &amp;p.Description, &amp;p.Category,
+                        &amp;p.Tags, &amp;p.IsPinned, &amp;pinnedUntil, &amp;p.CommentsOff, &amp;p.IsHidden,
+                        &amp;p.ViewCount, &amp;p.IsPremium, &amp;p.CreatedAt, &amp;p.UpdatedAt,
+                        &amp;p.AuthorNickname, &amp;p.AuthorAvatarURL, &amp;p.AuthorRole,
+                        &amp;p.AvgRating, &amp;p.RatingCount)
+                if err != nil </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+                <span class="cov8" title="1">p.PinnedUntil = pinnedUntil
+
+                fileRows, err := h.DB.Query("SELECT id, post_id, filename, file_path, file_type, file_size FROM files WHERE post_id = $1", p.ID)
+                if err == nil </span><span class="cov8" title="1">{
+                        for fileRows.Next() </span><span class="cov0" title="0">{
+                                var f models.File
+                                fileRows.Scan(&amp;f.ID, &amp;f.PostID, &amp;f.Filename, &amp;f.FilePath, &amp;f.FileType, &amp;f.FileSize)
+                                p.Files = append(p.Files, f)
+                        }</span>
+                        <span class="cov8" title="1">fileRows.Close()</span>
+                }
+
+                <span class="cov8" title="1">posts = append(posts, p)</span>
+        }
+
+        <span class="cov8" title="1">var totalPosts int
+        if category != "" </span><span class="cov8" title="1">{
+                h.DB.QueryRow("SELECT COUNT(*) FROM posts WHERE is_hidden = FALSE AND category = $1", category).Scan(&amp;totalPosts)
+        }</span> else<span class="cov8" title="1"> {
+                h.DB.QueryRow("SELECT COUNT(*) FROM posts WHERE is_hidden = FALSE").Scan(&amp;totalPosts)
+        }</span>
+        <span class="cov8" title="1">totalPages := (totalPosts + limit - 1) / limit
+
+        categories := []string{"Игры", "Веб-сервисы", "Мобильные приложения", "Логистика", "Финтех", "Образование", "Здоровье", "Социальные сети", "ИИ и ML", "Другое"}
+
+        var nickname string
+        if userID &gt; 0 </span><span class="cov8" title="1">{
+                h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+        }</span>
+
+        <span class="cov8" title="1">data := map[string]interface{}{
+                "Posts":      posts,
+                "UserID":     userID,
+                "UserRole":   role,
+                "Nickname":   nickname,
+                "Category":   category,
+                "Search":     search,
+                "Sort":       sort,
+                "Page":       page,
+                "TotalPages": totalPages,
+                "Categories": categories,
+        }
+
+        h.renderTemplate(w, "feed.html", data)</span>
+}
+
+func (h *Handler) HandleCreatePostPage(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+        categories := []string{"Игры", "Веб-сервисы", "Мобильные приложения", "Логистика", "Финтех", "Образование", "Здоровье", "Социальные сети", "ИИ и ML", "Другое"}
+
+        data := map[string]interface{}{
+                "UserID":     userID,
+                "UserRole":   role,
+                "Categories": categories,
+        }
+        h.renderTemplate(w, "create_post.html", data)
+}</span>
+
+func (h *Handler) HandleCreatePost(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+
+        maxSize := int64(50 &lt;&lt; 20)
+        if role == "premium" || role == "admin" </span><span class="cov8" title="1">{
+                maxSize = 100 &lt;&lt; 20
+        }</span>
+        <span class="cov8" title="1">r.ParseMultipartForm(maxSize)
+
+        title := strings.TrimSpace(r.FormValue("title"))
+        description := strings.TrimSpace(r.FormValue("description"))
+        category := strings.TrimSpace(r.FormValue("category"))
+        tags := strings.TrimSpace(r.FormValue("tags"))
+
+        if title == "" || description == "" </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Заголовок и описание обязательны")
+                return
+        }</span>
+
+        <span class="cov8" title="1">isPremium := role == "premium" || role == "admin"
+
+        var postID int
+        err := h.DB.QueryRow(
+                `INSERT INTO posts (author_id, title, description, category, tags, is_premium)
+                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+                userID, title, description, category, tags, isPremium,
+        ).Scan(&amp;postID)
+        if err != nil </span><span class="cov0" title="0">{
+                h.respondError(w, http.StatusInternalServerError, "Ошибка создания поста")
+                return
+        }</span>
+
+        <span class="cov8" title="1">files := r.MultipartForm.File["files"]
+        for _, fileHeader := range files </span><span class="cov8" title="1">{
+                if fileHeader.Size &gt; maxSize </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">file, err := fileHeader.Open()
+                if err != nil </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">ext := filepath.Ext(fileHeader.Filename)
+                newFilename := fmt.Sprintf("%d_%d%s", postID, time.Now().UnixNano(), ext)
+                filePath := filepath.Join(h.UploadDir, newFilename)
+
+                dst, err := os.Create(filePath)
+                if err != nil </span><span class="cov0" title="0">{
+                        file.Close()
+                        continue</span>
+                }
+
+                <span class="cov8" title="1">io.Copy(dst, file)
+                dst.Close()
+                file.Close()
+
+                contentType := fileHeader.Header.Get("Content-Type")
+                h.DB.Exec(
+                        `INSERT INTO files (post_id, filename, file_path, file_type, file_size)
+                        VALUES ($1, $2, $3, $4, $5)`,
+                        postID, fileHeader.Filename, "/uploads/"+newFilename, contentType, fileHeader.Size,
+                )</span>
+        }
+
+        <span class="cov8" title="1">pollQuestion := strings.TrimSpace(r.FormValue("poll_question"))
+        if pollQuestion != "" </span><span class="cov8" title="1">{
+                var pollID int
+                err := h.DB.QueryRow(
+                        "INSERT INTO polls (post_id, question) VALUES ($1, $2) RETURNING id",
+                        postID, pollQuestion,
+                ).Scan(&amp;pollID)
+                if err == nil </span><span class="cov8" title="1">{
+                        for i := 1; i &lt;= 10; i++ </span><span class="cov8" title="1">{
+                                optText := strings.TrimSpace(r.FormValue(fmt.Sprintf("poll_option_%d", i)))
+                                if optText != "" </span><span class="cov8" title="1">{
+                                        h.DB.Exec("INSERT INTO poll_options (poll_id, text) VALUES ($1, $2)", pollID, optText)
+                                }</span>
+                        }
+                }
+        }
+
+        <span class="cov8" title="1">h.respondJSON(w, http.StatusOK, map[string]interface{}{
+                "success":  true,
+                "redirect": fmt.Sprintf("/post/%d", postID),
+        })</span>
+}
+
+func (h *Handler) HandlePostPage(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+        postIDStr := strings.TrimPrefix(r.URL.Path, "/post/")
+        postID, err := strconv.Atoi(postIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                http.NotFound(w, r)
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec("UPDATE posts SET view_count = view_count + 1 WHERE id = $1", postID)
+
+        var p models.Post
+        var pinnedUntil *time.Time
+        err = h.DB.QueryRow(
+                `SELECT p.id, p.author_id, p.title, p.description, p.category, p.tags,
+                p.is_pinned, p.pinned_until, p.comments_off, p.is_hidden, p.view_count,
+                p.is_premium, p.created_at, p.updated_at,
+                u.nickname, u.avatar_url, u.role
+                FROM posts p JOIN users u ON p.author_id = u.id WHERE p.id = $1`,
+                postID,
+        ).Scan(&amp;p.ID, &amp;p.AuthorID, &amp;p.Title, &amp;p.Description, &amp;p.Category,
+                &amp;p.Tags, &amp;p.IsPinned, &amp;pinnedUntil, &amp;p.CommentsOff, &amp;p.IsHidden,
+                &amp;p.ViewCount, &amp;p.IsPremium, &amp;p.CreatedAt, &amp;p.UpdatedAt,
+                &amp;p.AuthorNickname, &amp;p.AuthorAvatarURL, &amp;p.AuthorRole)
+        if err != nil </span><span class="cov8" title="1">{
+                http.NotFound(w, r)
+                return
+        }</span>
+        <span class="cov8" title="1">p.PinnedUntil = pinnedUntil
+
+        fileRows, _ := h.DB.Query("SELECT id, post_id, filename, file_path, file_type, file_size FROM files WHERE post_id = $1", postID)
+        if fileRows != nil </span><span class="cov8" title="1">{
+                for fileRows.Next() </span><span class="cov8" title="1">{
+                        var f models.File
+                        fileRows.Scan(&amp;f.ID, &amp;f.PostID, &amp;f.Filename, &amp;f.FilePath, &amp;f.FileType, &amp;f.FileSize)
+                        p.Files = append(p.Files, f)
+                }</span>
+                <span class="cov8" title="1">fileRows.Close()</span>
+        }
+
+        <span class="cov8" title="1">var avgRating float64
+        var ratingCount int
+        h.DB.QueryRow(
+                "SELECT COALESCE(AVG(CASE WHEN is_expert THEN score * 1.5 ELSE score END), 0), COUNT(*) FROM ratings WHERE post_id = $1",
+                postID,
+        ).Scan(&amp;avgRating, &amp;ratingCount)
+        p.AvgRating = avgRating
+        p.RatingCount = ratingCount
+
+        commentRows, _ := h.DB.Query(
+                `SELECT c.id, c.post_id, c.author_id, c.parent_id, c.content, c.like_count, c.created_at,
+                u.nickname, u.avatar_url, u.role
+                FROM comments c JOIN users u ON c.author_id = u.id
+                WHERE c.post_id = $1 ORDER BY c.created_at ASC`,
+                postID,
+        )
+
+        var allComments []models.Comment
+        if commentRows != nil </span><span class="cov8" title="1">{
+                for commentRows.Next() </span><span class="cov8" title="1">{
+                        var c models.Comment
+                        commentRows.Scan(&amp;c.ID, &amp;c.PostID, &amp;c.AuthorID, &amp;c.ParentID, &amp;c.Content,
+                                &amp;c.LikeCount, &amp;c.CreatedAt, &amp;c.AuthorNickname, &amp;c.AuthorAvatarURL, &amp;c.AuthorRole)
+
+                        if userID &gt; 0 </span><span class="cov8" title="1">{
+                                var liked bool
+                                h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM comment_likes WHERE comment_id = $1 AND user_id = $2)", c.ID, userID).Scan(&amp;liked)
+                                c.LikedByUser = liked
+                        }</span>
+
+                        <span class="cov8" title="1">allComments = append(allComments, c)</span>
+                }
+                <span class="cov8" title="1">commentRows.Close()</span>
+        }
+
+        <span class="cov8" title="1">var topComments []models.Comment
+        commentMap := make(map[int]*models.Comment)
+        for i := range allComments </span><span class="cov8" title="1">{
+                commentMap[allComments[i].ID] = &amp;allComments[i]
+        }</span>
+        <span class="cov8" title="1">for i := range allComments </span><span class="cov8" title="1">{
+                if allComments[i].ParentID == nil </span><span class="cov8" title="1">{
+                        topComments = append(topComments, allComments[i])
+                }</span> else<span class="cov8" title="1"> {
+                        parent, ok := commentMap[*allComments[i].ParentID]
+                        if ok </span><span class="cov8" title="1">{
+                                parent.Replies = append(parent.Replies, allComments[i])
+                        }</span>
+                }
+        }
+
+        <span class="cov8" title="1">var userRating *models.Rating
+        if userID &gt; 0 </span><span class="cov8" title="1">{
+                var r models.Rating
+                err := h.DB.QueryRow(
+                        "SELECT id, post_id, user_id, score, review, is_expert FROM ratings WHERE post_id = $1 AND user_id = $2",
+                        postID, userID,
+                ).Scan(&amp;r.ID, &amp;r.PostID, &amp;r.UserID, &amp;r.Score, &amp;r.Review, &amp;r.IsExpert)
+                if err == nil </span><span class="cov8" title="1">{
+                        userRating = &amp;r
+                }</span>
+        }
+
+        <span class="cov8" title="1">ratingRows, _ := h.DB.Query(
+                `SELECT r.id, r.score, r.review, r.is_expert, r.created_at, u.nickname, u.avatar_url, u.role
+                FROM ratings r JOIN users u ON r.user_id = u.id
+                WHERE r.post_id = $1 AND r.review != '' ORDER BY r.is_expert DESC, r.created_at DESC`,
+                postID,
+        )
+        var reviews []map[string]interface{}
+        if ratingRows != nil </span><span class="cov8" title="1">{
+                for ratingRows.Next() </span><span class="cov8" title="1">{
+                        var id, score int
+                        var review string
+                        var isExpert bool
+                        var createdAt time.Time
+                        var nickname, avatarURL, userRole string
+                        ratingRows.Scan(&amp;id, &amp;score, &amp;review, &amp;isExpert, &amp;createdAt, &amp;nickname, &amp;avatarURL, &amp;userRole)
+                        reviews = append(reviews, map[string]interface{}{
+                                "ID":        id,
+                                "Score":     score,
+                                "Review":    review,
+                                "IsExpert":  isExpert,
+                                "CreatedAt": createdAt,
+                                "Nickname":  nickname,
+                                "AvatarURL": avatarURL,
+                                "UserRole":  userRole,
+                        })
+                }</span>
+                <span class="cov8" title="1">ratingRows.Close()</span>
+        }
+
+        <span class="cov8" title="1">var poll *models.Poll
+        var pollRow models.Poll
+        err = h.DB.QueryRow("SELECT id, post_id, question FROM polls WHERE post_id = $1", postID).Scan(&amp;pollRow.ID, &amp;pollRow.PostID, &amp;pollRow.Question)
+        if err == nil </span><span class="cov8" title="1">{
+                optRows, _ := h.DB.Query("SELECT id, poll_id, text, vote_count FROM poll_options WHERE poll_id = $1", pollRow.ID)
+                if optRows != nil </span><span class="cov8" title="1">{
+                        for optRows.Next() </span><span class="cov8" title="1">{
+                                var opt models.PollOption
+                                optRows.Scan(&amp;opt.ID, &amp;opt.PollID, &amp;opt.Text, &amp;opt.VoteCount)
+                                pollRow.Options = append(pollRow.Options, opt)
+                        }</span>
+                        <span class="cov8" title="1">optRows.Close()</span>
+                }
+                <span class="cov8" title="1">if userID &gt; 0 </span><span class="cov8" title="1">{
+                        var votedOptID int
+                        h.DB.QueryRow("SELECT option_id FROM poll_votes WHERE poll_id = $1 AND user_id = $2", pollRow.ID, userID).Scan(&amp;votedOptID)
+                        pollRow.VotedBy = votedOptID
+                }</span>
+                <span class="cov8" title="1">poll = &amp;pollRow</span>
+        }
+
+        <span class="cov8" title="1">teamRows, _ := h.DB.Query(
+                "SELECT id, post_id, author_id, title, description, skills, role_needed, is_open FROM team_requests WHERE post_id = $1 AND is_open = TRUE",
+                postID,
+        )
+        var teamRequests []models.TeamRequest
+        if teamRows != nil </span><span class="cov8" title="1">{
+                for teamRows.Next() </span><span class="cov8" title="1">{
+                        var tr models.TeamRequest
+                        teamRows.Scan(&amp;tr.ID, &amp;tr.PostID, &amp;tr.AuthorID, &amp;tr.Title, &amp;tr.Description, &amp;tr.Skills, &amp;tr.RoleNeeded, &amp;tr.IsOpen)
+                        teamRequests = append(teamRequests, tr)
+                }</span>
+                <span class="cov8" title="1">teamRows.Close()</span>
+        }
+
+        <span class="cov8" title="1">var nickname string
+        if userID &gt; 0 </span><span class="cov8" title="1">{
+                h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+        }</span>
+
+        <span class="cov8" title="1">data := map[string]interface{}{
+                "Post":         p,
+                "Comments":     topComments,
+                "UserRating":   userRating,
+                "Reviews":      reviews,
+                "Poll":         poll,
+                "TeamRequests": teamRequests,
+                "UserID":       userID,
+                "UserRole":     role,
+                "Nickname":     nickname,
+                "IsOwner":      userID == p.AuthorID,
+        }
+
+        h.renderTemplate(w, "post.html", data)</span>
+}
+
+func (h *Handler) HandleEditPostPage(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+        postIDStr := strings.TrimPrefix(r.URL.Path, "/post/edit/")
+        postID, err := strconv.Atoi(postIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                http.NotFound(w, r)
+                return
+        }</span>
+
+        <span class="cov8" title="1">var p models.Post
+        err = h.DB.QueryRow(
+                "SELECT id, author_id, title, description, category, tags, comments_off FROM posts WHERE id = $1",
+                postID,
+        ).Scan(&amp;p.ID, &amp;p.AuthorID, &amp;p.Title, &amp;p.Description, &amp;p.Category, &amp;p.Tags, &amp;p.CommentsOff)
+        if err != nil </span><span class="cov8" title="1">{
+                http.NotFound(w, r)
+                return
+        }</span>
+
+        <span class="cov8" title="1">if p.AuthorID != userID &amp;&amp; role != "admin" </span><span class="cov8" title="1">{
+                http.Error(w, "Forbidden", http.StatusForbidden)
+                return
+        }</span>
+
+        <span class="cov8" title="1">categories := []string{"Игры", "Веб-сервисы", "Мобильные приложения", "Логистика", "Финтех", "Образование", "Здоровье", "Социальные сети", "ИИ и ML", "Другое"}
+
+        data := map[string]interface{}{
+                "Post":       p,
+                "UserID":     userID,
+                "UserRole":   role,
+                "Categories": categories,
+        }
+        h.renderTemplate(w, "edit_post.html", data)</span>
+}
+
+func (h *Handler) HandleUpdatePost(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+        postIDStr := strings.TrimPrefix(r.URL.Path, "/api/posts/")
+        postIDStr = strings.TrimSuffix(postIDStr, "/update")
+        postID, err := strconv.Atoi(postIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный ID")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var authorID int
+        h.DB.QueryRow("SELECT author_id FROM posts WHERE id = $1", postID).Scan(&amp;authorID)
+        if authorID != userID &amp;&amp; role != "admin" </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusForbidden, "Нет доступа")
+                return
+        }</span>
+
+        <span class="cov8" title="1">maxSize := int64(50 &lt;&lt; 20)
+        if role == "premium" || role == "admin" </span><span class="cov0" title="0">{
+                maxSize = 100 &lt;&lt; 20
+        }</span>
+        <span class="cov8" title="1">r.ParseMultipartForm(maxSize)
+
+        title := strings.TrimSpace(r.FormValue("title"))
+        description := strings.TrimSpace(r.FormValue("description"))
+        category := strings.TrimSpace(r.FormValue("category"))
+        tags := strings.TrimSpace(r.FormValue("tags"))
+        commentsOff := r.FormValue("comments_off") == "on"
+
+        if title == "" || description == "" </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Заголовок и описание обязательны")
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec(
+                "UPDATE posts SET title=$1, description=$2, category=$3, tags=$4, comments_off=$5, updated_at=NOW() WHERE id=$6",
+                title, description, category, tags, commentsOff, postID,
+        )
+
+        if r.MultipartForm != nil &amp;&amp; r.MultipartForm.File["files"] != nil </span><span class="cov8" title="1">{
+                files := r.MultipartForm.File["files"]
+                for _, fileHeader := range files </span><span class="cov8" title="1">{
+                        if fileHeader.Size &gt; maxSize </span><span class="cov0" title="0">{
+                                continue</span>
+                        }
+                        <span class="cov8" title="1">file, err := fileHeader.Open()
+                        if err != nil </span><span class="cov0" title="0">{
+                                continue</span>
+                        }
+                        <span class="cov8" title="1">ext := filepath.Ext(fileHeader.Filename)
+                        newFilename := fmt.Sprintf("%d_%d%s", postID, time.Now().UnixNano(), ext)
+                        filePath := filepath.Join(h.UploadDir, newFilename)
+                        dst, err := os.Create(filePath)
+                        if err != nil </span><span class="cov0" title="0">{
+                                file.Close()
+                                continue</span>
+                        }
+                        <span class="cov8" title="1">io.Copy(dst, file)
+                        dst.Close()
+                        file.Close()
+                        contentType := fileHeader.Header.Get("Content-Type")
+                        h.DB.Exec(
+                                "INSERT INTO files (post_id, filename, file_path, file_type, file_size) VALUES ($1, $2, $3, $4, $5)",
+                                postID, fileHeader.Filename, "/uploads/"+newFilename, contentType, fileHeader.Size,
+                        )</span>
+                }
+        }
+
+        <span class="cov8" title="1">h.respondJSON(w, http.StatusOK, map[string]interface{}{
+                "success":  true,
+                "redirect": fmt.Sprintf("/post/%d", postID),
+        })</span>
+}
+
+func (h *Handler) HandleDeletePost(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+        postIDStr := strings.TrimPrefix(r.URL.Path, "/api/posts/")
+        postIDStr = strings.TrimSuffix(postIDStr, "/delete")
+        postID, err := strconv.Atoi(postIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный ID")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var authorID int
+        h.DB.QueryRow("SELECT author_id FROM posts WHERE id = $1", postID).Scan(&amp;authorID)
+        if authorID != userID &amp;&amp; role != "admin" </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusForbidden, "Нет доступа")
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec("DELETE FROM posts WHERE id = $1", postID)
+
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{
+                "success":  true,
+                "redirect": "/feed",
+        })</span>
+}
+
+func (h *Handler) HandleDeleteFile(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+        fileIDStr := strings.TrimPrefix(r.URL.Path, "/api/files/")
+        fileIDStr = strings.TrimSuffix(fileIDStr, "/delete")
+        fileID, err := strconv.Atoi(fileIDStr)
+        if err != nil </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный ID")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var postID int
+        var filePath string
+        h.DB.QueryRow("SELECT post_id, file_path FROM files WHERE id = $1", fileID).Scan(&amp;postID, &amp;filePath)
+
+        var authorID int
+        h.DB.QueryRow("SELECT author_id FROM posts WHERE id = $1", postID).Scan(&amp;authorID)
+        if authorID != userID &amp;&amp; role != "admin" </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusForbidden, "Нет доступа")
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec("DELETE FROM files WHERE id = $1", fileID)
+
+        if filePath != "" </span><span class="cov8" title="1">{
+                os.Remove("." + filePath)
+        }</span>
+
+        <span class="cov8" title="1">h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package handlers
+
+import (
+        "net/http"
+        "strconv"
+        "strings"
+
+        "startup-platform/internal/models"
+)
+
+func (h *Handler) HandleProfilePage(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+        profileIDStr := strings.TrimPrefix(r.URL.Path, "/profile/")
+        var profileID int
+        var err error
+
+        if profileIDStr == "" || profileIDStr == "me" </span><span class="cov8" title="1">{
+                profileID = userID
+        }</span> else<span class="cov8" title="1"> {
+                profileID, err = strconv.Atoi(profileIDStr)
+                if err != nil </span><span class="cov8" title="1">{
+                        http.NotFound(w, r)
+                        return
+                }</span>
+        }
+
+        <span class="cov8" title="1">var u models.User
+        err = h.DB.QueryRow(
+                `SELECT id, email, phone, nickname, name, city, bio, role, interests, user_role2, avatar_url, is_blocked, created_at
+                FROM users WHERE id = $1`,
+                profileID,
+        ).Scan(&amp;u.ID, &amp;u.Email, &amp;u.Phone, &amp;u.Nickname, &amp;u.Name, &amp;u.City, &amp;u.Bio,
+                &amp;u.Role, &amp;u.Interests, &amp;u.UserRole2, &amp;u.AvatarURL, &amp;u.IsBlocked, &amp;u.CreatedAt)
+        if err != nil </span><span class="cov8" title="1">{
+                http.NotFound(w, r)
+                return
+        }</span>
+
+        <span class="cov8" title="1">postRows, _ := h.DB.Query(
+                `SELECT p.id, p.title, p.description, p.category, p.view_count, p.created_at,
+                COALESCE(AVG(r.score), 0), COUNT(DISTINCT r.id)
+                FROM posts p LEFT JOIN ratings r ON r.post_id = p.id
+                WHERE p.author_id = $1 AND p.is_hidden = FALSE
+                GROUP BY p.id ORDER BY p.created_at DESC`,
+                profileID,
+        )
+
+        var userPosts []models.Post
+        if postRows != nil </span><span class="cov8" title="1">{
+                for postRows.Next() </span><span class="cov8" title="1">{
+                        var p models.Post
+                        postRows.Scan(&amp;p.ID, &amp;p.Title, &amp;p.Description, &amp;p.Category, &amp;p.ViewCount,
+                                &amp;p.CreatedAt, &amp;p.AvgRating, &amp;p.RatingCount)
+                        userPosts = append(userPosts, p)
+                }</span>
+                <span class="cov8" title="1">postRows.Close()</span>
+        }
+
+        <span class="cov8" title="1">var friendStatus string
+        if userID &gt; 0 &amp;&amp; userID != profileID </span><span class="cov8" title="1">{
+                h.DB.QueryRow("SELECT status FROM friendships WHERE user_id = $1 AND friend_id = $2", userID, profileID).Scan(&amp;friendStatus)
+                if friendStatus == "" </span><span class="cov8" title="1">{
+                        h.DB.QueryRow("SELECT status FROM friendships WHERE user_id = $1 AND friend_id = $2", profileID, userID).Scan(&amp;friendStatus)
+                        if friendStatus == "pending" </span><span class="cov0" title="0">{
+                                friendStatus = "incoming"
+                        }</span>
+                }
+        }
+
+        <span class="cov8" title="1">var isBlocked bool
+        if userID &gt; 0 &amp;&amp; userID != profileID </span><span class="cov8" title="1">{
+                h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM blocked_users WHERE user_id = $1 AND blocked_id = $2)", userID, profileID).Scan(&amp;isBlocked)
+        }</span>
+
+        <span class="cov8" title="1">var nickname string
+        h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+
+        data := map[string]interface{}{
+                "Profile":      u,
+                "Posts":        userPosts,
+                "UserID":       userID,
+                "UserRole":     role,
+                "Nickname":     nickname,
+                "IsOwner":      userID == profileID,
+                "FriendStatus": friendStatus,
+                "IsBlocked":    isBlocked,
+        }
+        h.renderTemplate(w, "profile.html", data)</span>
+}
+
+func (h *Handler) HandleEditProfile(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        r.ParseForm()
+
+        name := strings.TrimSpace(r.FormValue("name"))
+        city := strings.TrimSpace(r.FormValue("city"))
+        bio := strings.TrimSpace(r.FormValue("bio"))
+        interests := strings.TrimSpace(r.FormValue("interests"))
+        userRole2 := strings.TrimSpace(r.FormValue("user_role2"))
+        phone := strings.TrimSpace(r.FormValue("phone"))
+
+        h.DB.Exec(
+                "UPDATE users SET name=$1, city=$2, bio=$3, interests=$4, user_role2=$5, phone=$6, updated_at=NOW() WHERE id=$7",
+                name, city, bio, interests, userRole2, phone, userID,
+        )
+
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})
+}</span>
+
+func (h *Handler) HandleAddFriend(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        r.ParseForm()
+
+        friendIDStr := r.FormValue("friend_id")
+        friendID, err := strconv.Atoi(friendIDStr)
+        if err != nil || friendID == userID </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный запрос")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var exists bool
+        h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM friendships WHERE user_id = $1 AND friend_id = $2)", userID, friendID).Scan(&amp;exists)
+        if exists </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusConflict, "Запрос уже отправлен")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var incoming string
+        h.DB.QueryRow("SELECT status FROM friendships WHERE user_id = $1 AND friend_id = $2", friendID, userID).Scan(&amp;incoming)
+        if incoming == "pending" </span><span class="cov8" title="1">{
+                h.DB.Exec("UPDATE friendships SET status = 'accepted' WHERE user_id = $1 AND friend_id = $2", friendID, userID)
+                h.DB.Exec("INSERT INTO friendships (user_id, friend_id, status) VALUES ($1, $2, 'accepted') ON CONFLICT DO NOTHING", userID, friendID)
+
+                var nickname string
+                h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+                h.DB.Exec("INSERT INTO notifications (user_id, type, content, link) VALUES ($1, 'friend', $2, $3)",
+                        friendID, nickname+" принял вашу заявку в друзья", "/profile/"+strconv.Itoa(userID))
+        }</span> else<span class="cov8" title="1"> {
+                h.DB.Exec("INSERT INTO friendships (user_id, friend_id, status) VALUES ($1, $2, 'pending')", userID, friendID)
+
+                var nickname string
+                h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+                h.DB.Exec("INSERT INTO notifications (user_id, type, content, link) VALUES ($1, 'friend_request', $2, $3)",
+                        friendID, nickname+" хочет добавить вас в друзья", "/profile/"+strconv.Itoa(userID))
+        }</span>
+
+        <span class="cov8" title="1">h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+
+func (h *Handler) HandleRemoveFriend(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        r.ParseForm()
+
+        friendIDStr := r.FormValue("friend_id")
+        friendID, _ := strconv.Atoi(friendIDStr)
+
+        h.DB.Exec("DELETE FROM friendships WHERE (user_id = $1 AND friend_id = $2) OR (user_id = $2 AND friend_id = $1)", userID, friendID)
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})
+}</span>
+
+func (h *Handler) HandleBlockUser(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        r.ParseForm()
+
+        blockedIDStr := r.FormValue("blocked_id")
+        blockedID, _ := strconv.Atoi(blockedIDStr)
+
+        if blockedID == userID </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Нельзя заблокировать себя")
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec("INSERT INTO blocked_users (user_id, blocked_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", userID, blockedID)
+        h.DB.Exec("DELETE FROM friendships WHERE (user_id = $1 AND friend_id = $2) OR (user_id = $2 AND friend_id = $1)", userID, blockedID)
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+
+func (h *Handler) HandleUnblockUser(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        r.ParseForm()
+
+        blockedIDStr := r.FormValue("blocked_id")
+        blockedID, _ := strconv.Atoi(blockedIDStr)
+
+        h.DB.Exec("DELETE FROM blocked_users WHERE user_id = $1 AND blocked_id = $2", userID, blockedID)
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})
+}</span>
+
+func (h *Handler) HandleRepost(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        r.ParseForm()
+
+        postIDStr := r.FormValue("post_id")
+        postID, _ := strconv.Atoi(postIDStr)
+        comment := strings.TrimSpace(r.FormValue("comment"))
+
+        h.DB.Exec("INSERT INTO reposts (post_id, user_id, comment) VALUES ($1, $2, $3)", postID, userID, comment)
+
+        var postAuthorID int
+        h.DB.QueryRow("SELECT author_id FROM posts WHERE id = $1", postID).Scan(&amp;postAuthorID)
+        if postAuthorID != userID </span><span class="cov8" title="1">{
+                var nickname string
+                h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+                h.DB.Exec("INSERT INTO notifications (user_id, type, content, link) VALUES ($1, 'repost', $2, $3)",
+                        postAuthorID, nickname+" сделал репост вашего проекта", "/post/"+postIDStr)
+        }</span>
+
+        <span class="cov8" title="1">h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+
+func (h *Handler) HandleComplaint(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        r.ParseForm()
+
+        targetType := r.FormValue("target_type")
+        targetIDStr := r.FormValue("target_id")
+        targetID, _ := strconv.Atoi(targetIDStr)
+        category := r.FormValue("category")
+        description := strings.TrimSpace(r.FormValue("description"))
+
+        if description == "" </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Описание жалобы обязательно")
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec(
+                "INSERT INTO complaints (author_id, target_type, target_id, category, description) VALUES ($1, $2, $3, $4, $5)",
+                userID, targetType, targetID, category, description,
+        )
+
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+
+func (h *Handler) HandleTeamRequestCreate(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        r.ParseForm()
+
+        postIDStr := r.FormValue("post_id")
+        postID, _ := strconv.Atoi(postIDStr)
+        title := strings.TrimSpace(r.FormValue("title"))
+        description := strings.TrimSpace(r.FormValue("description"))
+        skills := strings.TrimSpace(r.FormValue("skills"))
+        roleNeeded := strings.TrimSpace(r.FormValue("role_needed"))
+
+        if title == "" </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Название запроса обязательно")
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec(
+                "INSERT INTO team_requests (post_id, author_id, title, description, skills, role_needed) VALUES ($1, $2, $3, $4, $5, $6)",
+                postID, userID, title, description, skills, roleNeeded,
+        )
+
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+
+func (h *Handler) HandleTeamRespond(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        r.ParseForm()
+
+        requestIDStr := r.FormValue("request_id")
+        requestID, _ := strconv.Atoi(requestIDStr)
+        message := strings.TrimSpace(r.FormValue("message"))
+
+        h.DB.Exec(
+                "INSERT INTO team_responses (request_id, user_id, message) VALUES ($1, $2, $3)",
+                requestID, userID, message,
+        )
+
+        var authorID int
+        h.DB.QueryRow("SELECT author_id FROM team_requests WHERE id = $1", requestID).Scan(&amp;authorID)
+        var nickname string
+        h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+        h.DB.Exec("INSERT INTO notifications (user_id, type, content, link) VALUES ($1, 'team_response', $2, $3)",
+                authorID, nickname+" откликнулся на ваш запрос команды", "/profile/"+strconv.Itoa(userID))
+
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})
+}</span>
+
+func (h *Handler) HandleTeamSearchPage(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, role := h.getCurrentUser(r)
+
+        rows, _ := h.DB.Query(
+                `SELECT tr.id, tr.post_id, tr.author_id, tr.title, tr.description, tr.skills, tr.role_needed, tr.is_open,
+                p.title as post_title
+                FROM team_requests tr JOIN posts p ON tr.post_id = p.id
+                WHERE tr.is_open = TRUE ORDER BY tr.created_at DESC`,
+        )
+
+        var requests []models.TeamRequest
+        if rows != nil </span><span class="cov8" title="1">{
+                for rows.Next() </span><span class="cov8" title="1">{
+                        var tr models.TeamRequest
+                        rows.Scan(&amp;tr.ID, &amp;tr.PostID, &amp;tr.AuthorID, &amp;tr.Title, &amp;tr.Description,
+                                &amp;tr.Skills, &amp;tr.RoleNeeded, &amp;tr.IsOpen, &amp;tr.PostTitle)
+                        requests = append(requests, tr)
+                }</span>
+                <span class="cov8" title="1">rows.Close()</span>
+        }
+
+        <span class="cov8" title="1">var nickname string
+        h.DB.QueryRow("SELECT nickname FROM users WHERE id = $1", userID).Scan(&amp;nickname)
+
+        data := map[string]interface{}{
+                "Requests": requests,
+                "UserID":   userID,
+                "UserRole": role,
+                "Nickname": nickname,
+        }
+        h.renderTemplate(w, "teams.html", data)</span>
+}
+
+func (h *Handler) HandleExpertApply(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        r.ParseForm()
+
+        portfolio := strings.TrimSpace(r.FormValue("portfolio"))
+        description := strings.TrimSpace(r.FormValue("description"))
+
+        if portfolio == "" || description == "" </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Портфолио и описание обязательны")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var exists bool
+        h.DB.QueryRow("SELECT EXISTS(SELECT 1 FROM expert_applications WHERE user_id = $1 AND status = 'pending')", userID).Scan(&amp;exists)
+        if exists </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusConflict, "Заявка уже подана")
+                return
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec("INSERT INTO expert_applications (user_id, portfolio, description) VALUES ($1, $2, $3)",
+                userID, portfolio, description)
+
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+
+func (h *Handler) HandleSubscribe(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userID, _ := h.getCurrentUser(r)
+        r.ParseForm()
+
+        plan := r.FormValue("plan")
+        if plan != "monthly" &amp;&amp; plan != "yearly" </span><span class="cov8" title="1">{
+                h.respondError(w, http.StatusBadRequest, "Некорректный план")
+                return
+        }</span>
+
+        <span class="cov8" title="1">var days int
+        if plan == "monthly" </span><span class="cov8" title="1">{
+                days = 30
+        }</span> else<span class="cov8" title="1"> {
+                days = 365
+        }</span>
+
+        <span class="cov8" title="1">h.DB.Exec(
+                "INSERT INTO subscriptions (user_id, plan, status, expires_at) VALUES ($1, $2, 'active', NOW() + INTERVAL '1 day' * $3)",
+                userID, plan, days,
+        )
+        h.DB.Exec("UPDATE users SET role = 'premium' WHERE id = $1 AND role = 'user'", userID)
+
+        h.respondJSON(w, http.StatusOK, map[string]interface{}{"success": true})</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package middleware
+
+import (
+        "context"
+        "database/sql"
+        "net/http"
+        "strings"
+        "time"
+
+        "crypto/hmac"
+        "crypto/sha256"
+        "encoding/base64"
+        "encoding/json"
+        "fmt"
+)
+
+type contextKey string
+
+const UserIDKey contextKey = "user_id"
+const UserRoleKey contextKey = "user_role"
+
+type JWTClaims struct {
+        UserID int    `json:"user_id"`
+        Role   string `json:"role"`
+        Exp    int64  `json:"exp"`
+}
+
+func GenerateJWT(secret string, userID int, role string) (string, error) <span class="cov8" title="1">{
+        header := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"HS256","typ":"JWT"}`))
+
+        claims := JWTClaims{
+                UserID: userID,
+                Role:   role,
+                Exp:    time.Now().Add(72 * time.Hour).Unix(),
+        }
+        claimsJSON, err := json.Marshal(claims)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+        <span class="cov8" title="1">payload := base64.RawURLEncoding.EncodeToString(claimsJSON)
+
+        mac := hmac.New(sha256.New, []byte(secret))
+        mac.Write([]byte(header + "." + payload))
+        signature := base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+
+        return header + "." + payload + "." + signature, nil</span>
+}
+
+func ValidateJWT(secret string, tokenStr string) (*JWTClaims, error) <span class="cov8" title="1">{
+        parts := strings.Split(tokenStr, ".")
+        if len(parts) != 3 </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("invalid token format")
+        }</span>
+
+        <span class="cov8" title="1">mac := hmac.New(sha256.New, []byte(secret))
+        mac.Write([]byte(parts[0] + "." + parts[1]))
+        expectedSig := base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+
+        if !hmac.Equal([]byte(parts[2]), []byte(expectedSig)) </span><span class="cov8" title="1">{
+                return nil, fmt.Errorf("invalid signature")
+        }</span>
+
+        <span class="cov8" title="1">claimsJSON, err := base64.RawURLEncoding.DecodeString(parts[1])
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("invalid payload")
+        }</span>
+
+        <span class="cov8" title="1">var claims JWTClaims
+        if err := json.Unmarshal(claimsJSON, &amp;claims); err != nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("invalid claims")
+        }</span>
+
+        <span class="cov8" title="1">if time.Now().Unix() &gt; claims.Exp </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("token expired")
+        }</span>
+
+        <span class="cov8" title="1">return &amp;claims, nil</span>
+}
+
+func AuthMiddleware(secret string, db *sql.DB) func(http.Handler) http.Handler <span class="cov8" title="1">{
+        return func(next http.Handler) http.Handler </span><span class="cov8" title="1">{
+                return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov8" title="1">{
+                        cookie, err := r.Cookie("token")
+                        if err != nil </span><span class="cov8" title="1">{
+                                http.Redirect(w, r, "/login", http.StatusSeeOther)
+                                return
+                        }</span>
+
+                        <span class="cov8" title="1">claims, err := ValidateJWT(secret, cookie.Value)
+                        if err != nil </span><span class="cov8" title="1">{
+                                http.Redirect(w, r, "/login", http.StatusSeeOther)
+                                return
+                        }</span>
+
+                        <span class="cov8" title="1">var role string
+                        var isBlocked bool
+                        err = db.QueryRow("SELECT role, is_blocked FROM users WHERE id = $1", claims.UserID).Scan(&amp;role, &amp;isBlocked)
+                        if err != nil || isBlocked </span><span class="cov8" title="1">{
+                                http.Redirect(w, r, "/login", http.StatusSeeOther)
+                                return
+                        }</span>
+
+                        <span class="cov8" title="1">ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+                        ctx = context.WithValue(ctx, UserRoleKey, role)
+                        next.ServeHTTP(w, r.WithContext(ctx))</span>
+                })
+        }
+}
+
+func APIAuthMiddleware(secret string, db *sql.DB) func(http.Handler) http.Handler <span class="cov8" title="1">{
+        return func(next http.Handler) http.Handler </span><span class="cov8" title="1">{
+                return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov8" title="1">{
+                        cookie, err := r.Cookie("token")
+                        if err != nil </span><span class="cov8" title="1">{
+                                http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+                                return
+                        }</span>
+
+                        <span class="cov8" title="1">claims, err := ValidateJWT(secret, cookie.Value)
+                        if err != nil </span><span class="cov8" title="1">{
+                                http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+                                return
+                        }</span>
+
+                        <span class="cov8" title="1">var role string
+                        var isBlocked bool
+                        err = db.QueryRow("SELECT role, is_blocked FROM users WHERE id = $1", claims.UserID).Scan(&amp;role, &amp;isBlocked)
+                        if err != nil || isBlocked </span><span class="cov8" title="1">{
+                                http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+                                return
+                        }</span>
+
+                        <span class="cov8" title="1">ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+                        ctx = context.WithValue(ctx, UserRoleKey, role)
+                        next.ServeHTTP(w, r.WithContext(ctx))</span>
+                })
+        }
+}
+
+func AdminMiddleware(next http.Handler) http.Handler <span class="cov8" title="1">{
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov8" title="1">{
+                role := r.Context().Value(UserRoleKey).(string)
+                if role != "admin" </span><span class="cov8" title="1">{
+                        http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
+                        return
+                }</span>
+                <span class="cov8" title="1">next.ServeHTTP(w, r)</span>
+        })
+}
+
+func OptionalAuthMiddleware(secret string, db *sql.DB) func(http.Handler) http.Handler <span class="cov8" title="1">{
+        return func(next http.Handler) http.Handler </span><span class="cov8" title="1">{
+                return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov8" title="1">{
+                        cookie, err := r.Cookie("token")
+                        if err != nil </span><span class="cov8" title="1">{
+                                next.ServeHTTP(w, r)
+                                return
+                        }</span>
+
+                        <span class="cov8" title="1">claims, err := ValidateJWT(secret, cookie.Value)
+                        if err != nil </span><span class="cov8" title="1">{
+                                next.ServeHTTP(w, r)
+                                return
+                        }</span>
+
+                        <span class="cov8" title="1">var role string
+                        var isBlocked bool
+                        err = db.QueryRow("SELECT role, is_blocked FROM users WHERE id = $1", claims.UserID).Scan(&amp;role, &amp;isBlocked)
+                        if err != nil || isBlocked </span><span class="cov8" title="1">{
+                                next.ServeHTTP(w, r)
+                                return
+                        }</span>
+
+                        <span class="cov8" title="1">ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+                        ctx = context.WithValue(ctx, UserRoleKey, role)
+                        next.ServeHTTP(w, r.WithContext(ctx))</span>
+                })
+        }
+}
+
+func GetUserID(r *http.Request) int <span class="cov8" title="1">{
+        val := r.Context().Value(UserIDKey)
+        if val == nil </span><span class="cov8" title="1">{
+                return 0
+        }</span>
+        <span class="cov8" title="1">return val.(int)</span>
+}
+
+func GetUserRole(r *http.Request) string <span class="cov8" title="1">{
+        val := r.Context().Value(UserRoleKey)
+        if val == nil </span><span class="cov8" title="1">{
+                return ""
+        }</span>
+        <span class="cov8" title="1">return val.(string)</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

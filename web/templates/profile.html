@@ -1,0 +1,218 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.Profile.Nickname}} - StartupPlatform</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+{{define "nav"}}
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/feed" class="nav-logo">StartupPlatform</a>
+    <div class="nav-links">
+      {{if .UserID}}
+      <a href="/feed" class="nav-link" title="Лента"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg><span>Лента</span></a>
+      <a href="/post/new" class="nav-link" title="Создать"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg><span>Создать</span></a>
+      <a href="/chat" class="nav-link" title="Чат"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg><span>Чат</span></a>
+      <a href="/notifications" class="nav-link" title="Уведомления"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg><span>Уведомления</span><span id="notif-badge" class="nav-badge hidden">0</span></a>
+      <a href="/profile/{{.UserID}}" class="nav-link" title="Профиль"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg><span>Профиль</span></a>
+      {{if or (eq .UserRole "premium") (eq .UserRole "expert") (eq .UserRole "admin")}}
+      <a href="/premium-stats" class="nav-link" title="Статистика"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg><span>Статистика</span></a>
+      {{end}}
+      {{if eq .UserRole "admin"}}
+      <a href="/admin" class="nav-link" title="Админ"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg><span>Админ</span></a>
+      {{end}}
+      <a href="/logout" class="nav-link" title="Выйти"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg><span>Выйти</span></a>
+      {{else}}
+      <a href="/login" class="nav-link">Войти</a>
+      <a href="/register" class="nav-link">Регистрация</a>
+      {{end}}
+    </div>
+  </div>
+</nav>
+{{end}}
+{{template "nav" .}}
+
+<div class="container">
+  {{if .Blocked}}
+  <div class="card">
+    <div class="card-body text-center" style="padding:40px">
+      <p class="text-muted">Вы не можете просматривать этот профиль</p>
+    </div>
+  </div>
+  {{else}}
+  <div class="card">
+    <div class="profile-header">
+      {{if .Profile.AvatarURL}}
+      <img src="{{.Profile.AvatarURL}}" alt="Аватар" class="profile-avatar" style="object-fit:cover">
+      {{else}}
+      <div class="profile-avatar">{{slice .Profile.Nickname 0 1}}</div>
+      {{end}}
+      <div class="profile-name">
+        {{.Profile.Name}}
+        {{if eq .Profile.Role "premium"}}<span class="role-badge premium">PRO</span>{{end}}
+        {{if eq .Profile.Role "expert"}}<span class="role-badge expert">Expert</span>{{end}}
+        {{if eq .Profile.Role "admin"}}<span class="role-badge admin">Admin</span>{{end}}
+      </div>
+      <div class="profile-nickname">@{{.Profile.Nickname}}</div>
+      {{if .Profile.Bio}}<div class="profile-bio">{{.Profile.Bio}}</div>{{end}}
+      {{if .Profile.City}}<div class="text-sm text-muted mt-8">{{.Profile.City}}</div>{{end}}
+
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <strong>{{.PostCount}}</strong>
+          <span>проектов</span>
+        </div>
+        <div class="profile-stat" style="cursor:pointer" onclick="openModal('followers-modal')">
+          <strong>{{.FollowersCount}}</strong>
+          <span>подписчиков</span>
+        </div>
+        <div class="profile-stat" style="cursor:pointer" onclick="openModal('following-modal')">
+          <strong>{{.FollowingCount}}</strong>
+          <span>подписок</span>
+        </div>
+      </div>
+
+      {{if .UserID}}
+        {{if ne .UserID .Profile.ID}}
+        <div class="profile-actions">
+          {{if .IsFollowing}}
+          <form data-api="/api/unfollow" data-reload="true"><input type="hidden" name="user_id" value="{{.Profile.ID}}"><button type="submit" class="btn btn-secondary">Отписаться</button></form>
+          {{else}}
+          <form data-api="/api/follow" data-reload="true"><input type="hidden" name="user_id" value="{{.Profile.ID}}"><button type="submit" class="btn btn-primary">Подписаться</button></form>
+          {{end}}
+          <a href="/chat/{{.Profile.ID}}" class="btn btn-outline">Написать</a>
+          {{if not .IsBlockedByMe}}
+          <form data-api="/api/block" data-reload="true"><input type="hidden" name="user_id" value="{{.Profile.ID}}"><button type="submit" class="btn btn-sm btn-outline" style="color:var(--danger)">Заблокировать</button></form>
+          {{else}}
+          <form data-api="/api/unblock" data-reload="true"><input type="hidden" name="user_id" value="{{.Profile.ID}}"><button type="submit" class="btn btn-sm btn-outline">Разблокировать</button></form>
+          {{end}}
+        </div>
+        {{else}}
+        <div class="profile-actions">
+          <a href="/settings" class="btn btn-outline">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Настройки
+          </a>
+          {{if .CanViewStats}}
+          <a href="/premium-stats" class="btn btn-outline">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+            Статистика
+          </a>
+          {{end}}
+          {{if ne .Profile.Role "expert"}}
+          <a href="/expert/apply" class="btn btn-outline">🎓 Стать экспертом</a>
+          {{end}}
+          <a href="/logout" class="btn btn-outline" style="color:var(--danger)">Выйти</a>
+        </div>
+        {{end}}
+      {{end}}
+    </div>
+
+    <!-- Projects -->
+    {{if .Projects}}
+    <div class="card-body" style="border-top:1px solid var(--border-light)">
+      <h3 style="font-size:.9rem;font-weight:700;margin-bottom:10px">Коллекции</h3>
+      {{range .Projects}}
+      <a href="/project/{{.ID}}" class="project-card" style="display:block;text-decoration:none;color:inherit">
+        <div class="project-card-title">{{.Title}}</div>
+        {{if .Description}}<div class="project-card-desc">{{.Description}}</div>{{end}}
+        <div class="project-card-meta">{{.PostCount}} проектов</div>
+      </a>
+      {{end}}
+    </div>
+    {{end}}
+  </div>
+
+  <!-- User posts -->
+  {{range .Posts}}
+  <div class="card">
+    <div class="post-header">
+      <div class="post-avatar">{{slice $.Profile.Nickname 0 1}}</div>
+      <div class="post-meta">
+        <div class="post-author">{{$.Profile.Nickname}} {{if .Category}}<span class="category-badge">{{.Category}}</span>{{end}}</div>
+        <div class="post-time">{{timeAgo .CreatedAt}}</div>
+      </div>
+    </div>
+    <div class="post-title"><a href="/post/{{.ID}}">{{.Title}}</a></div>
+    <div class="post-desc">{{if gt (len .Description) 150}}{{slice .Description 0 150}}...{{else}}{{.Description}}{{end}}</div>
+    <div class="post-stats">
+      <span>{{printf "%.1f" .AvgRating}}</span>
+      <span>{{.CommentCount}} комм.</span>
+      <span>{{.ViewCount}} просм.</span>
+    </div>
+  </div>
+  {{end}}
+  {{end}}
+</div>
+
+<!-- Followers modal -->
+<div id="followers-modal" class="modal-overlay" onclick="if(event.target===this)closeModal('followers-modal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Подписчики</h3>
+      <button class="modal-close" onclick="closeModal('followers-modal')">&times;</button>
+    </div>
+    <div id="followers-list" class="modal-body" style="max-height:400px;overflow-y:auto">
+      <p class="text-muted text-sm">Загрузка...</p>
+    </div>
+  </div>
+</div>
+
+<!-- Following modal -->
+<div id="following-modal" class="modal-overlay" onclick="if(event.target===this)closeModal('following-modal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Подписки</h3>
+      <button class="modal-close" onclick="closeModal('following-modal')">&times;</button>
+    </div>
+    <div id="following-list" class="modal-body" style="max-height:400px;overflow-y:auto">
+      <p class="text-muted text-sm">Загрузка...</p>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/app.js"></script>
+<script>
+(function(){
+  const profileID = {{.Profile.ID}};
+
+  function renderUsers(users, containerId) {
+    const container = document.getElementById(containerId);
+    if (!users || users.length === 0) {
+      container.innerHTML = '<p class="text-muted text-sm" style="padding:16px">Пусто</p>';
+      return;
+    }
+    container.innerHTML = users.map(u =>
+      '<a href="/profile/' + u.id + '" style="display:flex;align-items:center;gap:10px;padding:10px 16px;text-decoration:none;color:inherit;border-bottom:1px solid var(--border-light)">' +
+        '<div class="post-avatar" style="width:36px;height:36px;font-size:.8rem">' + (u.nickname ? u.nickname[0] : '?') + '</div>' +
+        '<div><div style="font-weight:600">' + (u.nickname || '') + '</div>' +
+        (u.bio ? '<div class="text-sm text-muted">' + u.bio.substring(0, 60) + '</div>' : '') +
+        '</div></a>'
+    ).join('');
+  }
+
+  const fersModal = document.getElementById('followers-modal');
+  const fingModal = document.getElementById('following-modal');
+  if (fersModal) {
+    const obs = new MutationObserver(() => {
+      if (fersModal.classList.contains('show')) {
+        api('/api/followers?user_id=' + profileID).then(users => renderUsers(users, 'followers-list')).catch(() => {});
+      }
+    });
+    obs.observe(fersModal, {attributes: true, attributeFilter: ['class']});
+  }
+  if (fingModal) {
+    const obs = new MutationObserver(() => {
+      if (fingModal.classList.contains('show')) {
+        api('/api/following?user_id=' + profileID).then(users => renderUsers(users, 'following-list')).catch(() => {});
+      }
+    });
+    obs.observe(fingModal, {attributes: true, attributeFilter: ['class']});
+  }
+})();
+</script>
+</body>
+</html>

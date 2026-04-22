@@ -1,0 +1,325 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{.Post.Title}} - StartupPlatform</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+{{define "nav"}}
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/feed" class="nav-logo">StartupPlatform</a>
+    <div class="nav-links">
+      {{if .UserID}}
+      <a href="/feed" class="nav-link" title="Лента"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg><span>Лента</span></a>
+      <a href="/post/new" class="nav-link" title="Создать"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg><span>Создать</span></a>
+      <a href="/chat" class="nav-link" title="Сообщения"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg><span>Чат</span></a>
+      <a href="/notifications" class="nav-link" title="Уведомления"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/></svg><span>Уведомления</span><span id="notif-badge" class="nav-badge hidden">0</span></a>
+      <a href="/profile/{{.UserID}}" class="nav-link" title="Профиль"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg><span>Профиль</span></a>
+      {{if or (eq .UserRole "premium") (eq .UserRole "expert") (eq .UserRole "admin")}}
+      <a href="/premium-stats" class="nav-link" title="Статистика"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg><span>Статистика</span></a>
+      {{end}}
+      {{if eq .UserRole "admin"}}
+      <a href="/admin" class="nav-link" title="Админ"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg><span>Админ</span></a>
+      {{end}}
+      <a href="/logout" class="nav-link" title="Выйти"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="22" height="22"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg><span>Выйти</span></a>
+      {{else}}
+      <a href="/login" class="nav-link">Войти</a>
+      <a href="/register" class="nav-link">Регистрация</a>
+      {{end}}
+    </div>
+  </div>
+</nav>
+{{end}}
+{{template "nav" .}}
+
+<div class="container">
+  <div class="card">
+    <div class="post-header">
+      <a href="/profile/{{.Post.AuthorID}}" class="post-avatar">{{slice .Post.AuthorNickname 0 1}}</a>
+      <div class="post-meta">
+        <div class="post-author">
+          <a href="/profile/{{.Post.AuthorID}}" style="color:inherit">{{.Post.AuthorNickname}}</a>
+          {{if eq .Post.AuthorRole "premium"}}<span class="role-badge premium">PRO</span>{{end}}
+          {{if eq .Post.AuthorRole "expert"}}<span class="role-badge expert">Expert</span>{{end}}
+          {{if .Post.Category}}<span class="category-badge">{{.Post.Category}}</span>{{end}}
+        </div>
+        <div class="post-time">{{timeAgo .Post.CreatedAt}}</div>
+      </div>
+      {{if or (eq .UserID .Post.AuthorID) (eq .UserRole "admin")}}
+      <a href="/post/{{.Post.ID}}/edit" class="btn btn-sm btn-outline">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"/></svg>
+        Редактировать
+      </a>
+      {{end}}
+    </div>
+
+    <div class="post-title" style="font-size:1.3rem">{{.Post.Title}}</div>
+    <div class="post-desc" style="white-space:pre-wrap">{{.Post.Description}}</div>
+    {{if .Post.Tags}}<div class="post-tags">{{range split .Post.Tags ","}}<span class="post-tag">{{.}}</span>{{end}}</div>{{end}}
+
+    {{if .Post.Files}}
+    <div class="file-gallery">
+      {{range .Post.Files}}
+      <img src="{{.FilePath}}" alt="{{.Filename}}">
+      {{end}}
+    </div>
+    {{end}}
+
+    <!-- Rating -->
+    <div class="card-body" style="border-top:1px solid var(--border-light)">
+      <div class="rating-display" style="margin-bottom:12px">
+        <span class="rating-num">{{printf "%.1f" .Post.AvgRating}}</span>
+        <div>
+          <div style="color:#fbbf24">{{range intRange 1 6}}{{if le . (roundInt $.Post.AvgRating)}}<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="16" height="16"><path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>{{else}}<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>{{end}}{{end}}</div>
+          <div class="rating-info">{{.Post.RatingCount}} оценок</div>
+        </div>
+      </div>
+
+      {{if .UserID}}
+      <form data-api="/api/rate" data-reload="true">
+        <input type="hidden" name="post_id" value="{{.Post.ID}}">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <label class="form-label" style="margin:0">Ваша оценка:</label>
+          <div id="rating-stars" style="display:flex;gap:4px;cursor:pointer">
+            {{range intRange 1 6}}<span class="rating-star" data-value="{{.}}" style="color:#d1d5db;font-size:1.5rem;transition:color .15s">&#9733;</span>{{end}}
+          </div>
+          <input type="hidden" name="score" id="rating-score" value="0">
+        <div class="form-group">
+          <input type="text" name="review" class="form-input" placeholder="Отзыв (необязательно)">
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Оценить</button>
+      </form>
+      {{end}}
+    </div>
+
+    <!-- Expert reviews -->
+    {{range .Ratings}}
+    {{if .IsExpert}}
+    <div class="review-card expert-review">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span class="role-badge expert">Expert</span>
+        <strong style="font-size:.85rem">{{.UserNickname}}</strong>
+        <span style="color:#fbbf24;font-weight:700">{{.Score}}/5</span>
+      </div>
+      {{if .Review}}<p style="font-size:.85rem">{{.Review}}</p>{{end}}
+    </div>
+    {{end}}
+    {{end}}
+  </div>
+
+  <!-- Expert consultation offer (for experts viewing others' posts) -->
+  {{if and (eq .UserRole "expert") (not .IsOwner)}}
+  <div class="card" style="padding:16px">
+    <h3 style="font-size:.95rem;font-weight:700;margin-bottom:10px">Предложить экспертную консультацию</h3>
+    <form data-api="/api/expert/consultation" data-reload="true">
+      <input type="hidden" name="post_id" value="{{.Post.ID}}">
+      <div class="form-group">
+        <input type="text" name="title" class="form-input" placeholder="Тема консультации" required>
+      </div>
+      <div class="form-group">
+        <textarea name="description" class="form-textarea" placeholder="Опишите что вы можете предложить..." rows="3" required></textarea>
+      </div>
+      <div class="form-group">
+        <input type="number" name="price" class="form-input" placeholder="Цена (USD)" step="0.01" min="0" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">Предложить</button>
+    </form>
+  </div>
+  {{end}}
+
+  <!-- Pending consultations (for post owner) -->
+  {{if .PendingConsultations}}
+  <div class="card" style="padding:16px">
+    <h3 style="font-size:.95rem;font-weight:700;margin-bottom:10px">Предложения экспертных консультаций</h3>
+    {{range .PendingConsultations}}
+    <div style="padding:10px;border:1px solid var(--border-light);border-radius:8px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:6px">
+        <strong>{{.Title}}</strong>
+        <span style="font-weight:700;color:var(--accent)">{{.Price}}$</span>
+      </div>
+      <p class="text-sm text-muted" style="margin-bottom:6px">{{.Description}}</p>
+      <p class="text-sm" style="margin-bottom:8px"><span class="role-badge expert" style="font-size:.6rem;padding:1px 4px">Expert</span> {{.ExpertNickname}}</p>
+      <div style="display:flex;gap:6px">
+        <form data-api="/api/consultation/respond" data-reload="true" style="margin:0">
+          <input type="hidden" name="consultation_id" value="{{.ID}}">
+          <input type="hidden" name="action" value="accept">
+          <button type="submit" class="btn btn-sm btn-primary">Принять</button>
+        </form>
+        <form data-api="/api/consultation/respond" data-reload="true" style="margin:0">
+          <input type="hidden" name="consultation_id" value="{{.ID}}">
+          <input type="hidden" name="action" value="decline">
+          <button type="submit" class="btn btn-sm btn-outline" style="color:var(--danger)">Отклонить</button>
+        </form>
+      </div>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+
+  <!-- Poll -->
+  {{if .Poll}}
+  <div class="card">
+    <div class="poll">
+      <div class="poll-question">{{.Poll.Question}}</div>
+      {{$totalVotes := .PollTotalVotes}}
+      {{range .PollOptions}}
+      <form data-api="/api/poll/vote" data-reload="true" style="margin:0">
+        <input type="hidden" name="option_id" value="{{.ID}}">
+        <button type="submit" class="poll-option" style="width:100%;text-align:left">
+          <span>{{.Text}}</span>
+          <div class="poll-bar"><div class="poll-bar-fill" style="width:{{if gt $totalVotes 0}}{{printf "%.0f" (divFloat (mulFloat (toFloat .VoteCount) 100.0) (toFloat $totalVotes))}}{{else}}0{{end}}%"></div></div>
+          <span class="poll-votes">{{.VoteCount}}</span>
+        </button>
+      </form>
+      {{end}}
+    </div>
+  </div>
+  {{end}}
+
+  <!-- Team requests -->
+  {{if .TeamRequests}}
+  <div class="card">
+    <div class="card-body">
+      <h3 style="font-size:.95rem;font-weight:700;margin-bottom:12px">Поиск команды</h3>
+      {{range .TeamRequests}}
+      <div class="team-card">
+        <div class="team-card-title">{{.Title}}</div>
+        <div class="team-card-desc">{{.Description}}</div>
+        <div class="team-card-skills">
+          {{range split .Skills ","}}<span class="skill-tag">{{.}}</span>{{end}}
+        </div>
+        {{if gt $.UserID 0}}
+        <form data-api="/api/team/respond" data-reload="true" style="margin-top:8px;display:flex;gap:8px">
+          <input type="hidden" name="request_id" value="{{.ID}}">
+          <input type="text" name="message" class="form-input" placeholder="Ваше сообщение" style="flex:1" required>
+          <button type="submit" class="btn btn-primary btn-sm">Откликнуться</button>
+        </form>
+        {{end}}
+      </div>
+      {{end}}
+    </div>
+  </div>
+  {{end}}
+
+  <!-- Comments -->
+  <div class="card">
+    <div class="card-body">
+      <h3 style="font-size:.95rem;font-weight:700;margin-bottom:12px">Комментарии ({{len .Comments}})</h3>
+      {{if .UserID}}
+      <form data-api="/api/comments/add" data-reload="true" style="margin-bottom:16px">
+        <input type="hidden" name="post_id" value="{{.Post.ID}}">
+        <div class="form-group">
+          <textarea name="content" class="form-textarea" placeholder="Написать комментарий..." required rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Отправить</button>
+      </form>
+      {{end}}
+
+      {{range .Comments}}
+      <div class="comment">
+        <a href="/profile/{{.AuthorID}}" class="post-avatar" style="width:32px;height:32px;font-size:.75rem">{{slice .AuthorNickname 0 1}}</a>
+        <div class="comment-body">
+          <div class="comment-header">
+            <a href="/profile/{{.AuthorID}}" class="comment-author">{{.AuthorNickname}}</a>
+            <span class="comment-time">{{timeAgo .CreatedAt}}</span>
+          </div>
+          <div class="comment-text">{{.Content}}</div>
+          <div class="comment-actions">
+            {{if $.UserID}}
+            <form data-api="/api/comments/{{.ID}}/like" data-reload="true" style="display:inline;margin:0">
+              <input type="hidden" name="comment_id" value="{{.ID}}">
+              <button type="submit" class="comment-action">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                {{.LikeCount}}
+              </button>
+            </form>
+            {{end}}
+          </div>
+        </div>
+      </div>
+      {{end}}
+
+      {{if not .Comments}}
+      <p class="text-muted text-sm">Комментариев пока нет</p>
+      {{end}}
+    </div>
+  </div>
+
+  <!-- Share/Complaint -->
+  {{if .UserID}}
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button class="btn btn-sm btn-outline" onclick="openModal('share-modal')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+      Поделиться в чате
+    </button>
+    <button class="btn btn-sm btn-outline" onclick="openModal('complaint-modal')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0l2.77-.693a9 9 0 016.208.682l.108.054a9 9 0 006.086.71l3.114-.732a48.524 48.524 0 01-.005-10.499l-3.11.732a9 9 0 01-6.085-.711l-.108-.054a9 9 0 00-6.208-.682L3 4.5M3 15V4.5"/></svg>
+      Пожаловаться
+    </button>
+  </div>
+
+  <!-- Share modal -->
+  <div id="share-modal" class="modal-overlay" onclick="if(event.target===this)closeModal('share-modal')">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Поделиться в чате</h3>
+        <button class="modal-close" onclick="closeModal('share-modal')">&times;</button>
+      </div>
+      <form data-api="/api/share-to-chat">
+        <input type="hidden" name="post_id" value="{{.Post.ID}}">
+        <div class="form-group">
+          <label class="form-label">Получатель</label>
+          {{if .Following}}
+          <select name="receiver_id" class="form-select" required>
+            <option value="">Выберите пользователя</option>
+            {{range .Following}}
+            <option value="{{.ID}}">{{.Nickname}}</option>
+            {{end}}
+          </select>
+          {{else}}
+          <p class="text-sm text-muted">Вы ни на кого не подписаны</p>
+          {{end}}
+        </div>
+        {{if .Following}}
+        <button type="submit" class="btn btn-primary btn-block">Отправить</button>
+        {{end}}
+      </form>
+    </div>
+  </div>
+
+  <!-- Complaint modal -->
+  <div id="complaint-modal" class="modal-overlay" onclick="if(event.target===this)closeModal('complaint-modal')">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Жалоба</h3>
+        <button class="modal-close" onclick="closeModal('complaint-modal')">&times;</button>
+      </div>
+      <form data-api="/api/complaint">
+        <input type="hidden" name="target_type" value="post">
+        <input type="hidden" name="target_id" value="{{.Post.ID}}">
+        <div class="form-group">
+          <label class="form-label">Категория</label>
+          <select name="category" class="form-select" required>
+            <option value="spam">Спам</option>
+            <option value="offensive">Оскорбление</option>
+            <option value="fraud">Мошенничество</option>
+            <option value="other">Другое</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Описание</label>
+          <textarea name="description" class="form-textarea" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-danger btn-block">Отправить жалобу</button>
+      </form>
+    </div>
+  </div>
+  {{end}}
+</div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
